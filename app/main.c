@@ -16,8 +16,6 @@
 #include <stdio.h> 
 
 
-
-
 #include "../include/lsmod.h" 
 
 
@@ -30,7 +28,7 @@ main (int __ac  , char ** __av)
   lsmod_t  module_list ;   
   lsmod_syspath_open(LSMOD_LINUX_SYSMOD, &module_list)  ; 
  
-  //lsmod_list_all_module_found(&module_list) ; 
+ // lsmod_list_all_module_found(&module_list) ; 
   
   //int count =  lsmod_count_loaded_modules(&module_list) ;  
   

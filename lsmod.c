@@ -25,6 +25,7 @@ static int modlive = 0;
 
 struct  __mod_t *lsmod_load_live_sysprocmod (void) 
 {
+    
     int  pmod_fd  = open ( LSMOD_LINUX_PROCMOD , O_RDONLY ) ; 
     
     if (pmod_fd  <= ~0 ) { 
@@ -33,10 +34,10 @@ struct  __mod_t *lsmod_load_live_sysprocmod (void)
     
     if (  dup2(pmod_fd , STDIN_FILENO)  <= ~0 ) 
     {
-      //lsmod_err(LSMOD_STREAM_DUP_ERR , "stream duplication error") ; 
-      errx ( -2 ,  "stream duplication error" ) ; 
+      lsmod_errx(LSMOD_DUP_STREAM_ERR , "stream duplication error") ; 
     }
-    
+   
+    //! TODO : do no forget  to free all 
     struct __mod_t  * modules_collection = ( struct __mod_t *) malloc(sizeof(*modules_collection)  * MAX_LOADABLE_MDLS) ;  
     
     char inline_buffer[MAX_LOADABLE_MDLS << 3 ]  =   {0} ;
@@ -53,7 +54,7 @@ struct  __mod_t *lsmod_load_live_sysprocmod (void)
     return modules_collection ;  
 } 
 
-
+//! just parse  inline string  
 static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt) 
 {
 
@@ -64,7 +65,7 @@ static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt)
   uchar_t  stage = 0; 
   while ( token != _nullable  ) 
   {
-    switch (stage ) { 
+    switch (stage) { 
       case LSMOD_MODULE_NAME :  
         memcpy(modt->name ,  token ,  strlen(token)) ;
         //lsmod_log("%s" , modt->name) ; 
@@ -94,23 +95,14 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
 {
 
  
-  mod_t  * modules = lsmod_load_live_sysprocmod()  ; 
-  
+  //mod_t  * modules = lsmod_load_live_sysprocmod()  ;
+
+  lsmod->modules = lsmod_load_live_sysprocmod();  
+ 
   int  sysmod_fd =   open (gl_syspath ,  O_RDONLY) ; 
   if (sysmod_fd <=~0)  { 
-    errx(LSMOD_UKN_SYS_PATH  , "Not a Valid Path :: error code %s\n" , strerror(errno)) ; 
+    lsmod_errx(LSMOD_UKN_SYS_PATH  , "Not a Valid Path :: error code %s\n" , strerror(errno)) ; 
   }
-
- 
-  /* 
-  int  i = 0 ; 
-  
-  while (  i <   modlive)     
-  {
-    printf("name -> %s \n" , (modules+i)->name) ; 
-    i++ ;  
-  }
-  */ 
 
   DIR* sysmod =  _nullable ; 
   sysmod = fdopendir(sysmod_fd) ;  
@@ -128,42 +120,47 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
   //!  TODO  : create a generic function that read contents of directory 
   while (  (dirp = readdir(sysmod))  != _nullable )  { 
     
-    if ( dirp->d_type  ==  DT_DIR ) { 
-       //! catch only directory 
+    if ( dirp->d_type  ==  DT_DIR &&   dirp->d_name[0] !=  '.'/** escape  ./ ../ and hidden directory */) { 
+      
+       //! clean first 
        explicit_bzero((lsmod->modules_names+index), MAX_LOADABLE_MDLS) ;
       
        uchar_t  match  = 0 ;
-       while ( match < modlive ) 
-       {
-         if(strcmp((modules+match)->name  , dirp->d_name) !=  0) continue ; 
-         lsmod_log("match -> %s" ,  dirp->d_name) ; 
+       while ( match <= modlive ) 
+       { 
+         /** Check match */
+         if(strcmp((lsmod->modules+match)->name  , dirp->d_name) ==  0) {
+          //!lsmod_log("%s" ,  dirp->d_name) ; 
+         }
          match++ ; 
        }
-       memcpy( (lsmod->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) ); 
-       printf ("^s---> %s\n" , (lsmod->modules_names+index)); 
+       memcpy( (lsmod->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
+
+
+       printf("%s::\n", (char*)(lsmod->modules_names+index)) ; 
        index++ ;
-       //printf ("^s---> %s\n" , (lsmod->modules_names+index)); 
     }
   }
  
   lsmod->modules_names[index+1]= _nullable ; 
- 
   lsmod->total_of_module = index; 
-  
   
   return   lsmod ; 
 }
 
 void lsmod_list_all_module_found ( const struct __lsmod_t * restrict   lsmod  ) 
 {
-  if ( lsmod  == _nullable) return  ; 
+  /**  NOTE: depending  on parameter 
+   *   -> load loaded module  or load all module from LSMOD_LINUX_SYSMOD **/
+  if ( lsmod  == _nullable) return  ;
   
   uchar_t index =0  ;
-  while  (  lsmod->modules_names[index]   != _nullable )    {
+
+  //! That show all module from  LSMOD_LINUX_SYSMOD  
+  while  (  lsmod->modules_names[index]   != _nullable )  {
     
-    lsmod_log("%s" , (lsmod->modules_names+index)) ; 
+    lsmod_log("%s" , (char *)(lsmod->modules_names+index)) ; 
     index++; 
-    
   }
   
   printf("-----\ntotal of kmod : %i \n", index) ; 
