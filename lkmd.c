@@ -21,7 +21,7 @@
 #include "include/lkmd.h" 
 
 
-static int modlive = 0;  
+static int kmodlive = 0;  
 
 struct  __mod_t *lkmd_load_live_sysprocmod (void) 
 {
@@ -37,7 +37,6 @@ struct  __mod_t *lkmd_load_live_sysprocmod (void)
       lkmd_errx(LKMD_DUP_STREAM_ERR , "stream duplication error") ; 
     }
    
-    //! TODO : do no forget  to free all 
     struct __mod_t  * modules_collection = ( struct __mod_t *) malloc(sizeof(*modules_collection)  * MAX_LOADABLE_MDLS) ;  
     
     char inline_buffer[MAX_LOADABLE_MDLS << 3 ]  =   {0} ;
@@ -50,7 +49,7 @@ struct  __mod_t *lkmd_load_live_sysprocmod (void)
     }
 
     close (pmod_fd) ;
-    modlive =  index ; 
+    kmodlive =  index ; 
     return modules_collection ;  
 } 
 
@@ -95,11 +94,18 @@ void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * 
 {
 
  
-  //mod_t  * modules = lkmd_load_live_sysprocmod()  ;
+  char sysmpath[MAX_LOADABLE_MDLS >> 3]  = { 0 } ; 
+  if ( gl_syspath == _nullable ) 
+  {
+     memcpy(sysmpath , LKMD_LINUX_SYSMOD , strlen(LKMD_LINUX_SYSMOD)) ;  
+  }else  { 
+     memcpy(sysmpath , gl_syspath , strlen(gl_syspath)) ; 
+  }
 
   lkmd->modules = lkmd_load_live_sysprocmod();  
- 
-  int  sysmod_fd =   open (gl_syspath ,  O_RDONLY) ; 
+  lkmd->total_of_live_module = 0 ; 
+  
+  int  sysmod_fd =   open (sysmpath  ,  O_RDONLY) ; 
   if (sysmod_fd <=~0)  { 
     lkmd_errx(LKMD_UKN_SYS_PATH  , "Not a Valid Path :: error code %s\n" , strerror(errno)) ; 
   }
@@ -115,38 +121,36 @@ void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * 
   memcpy(lkmd->root_path ,  gl_syspath , strlen(gl_syspath)) ; 
   
   struct dirent  * dirp = _nullable ; 
-  
   uchar_t index   = 0 ; 
-  //!  TODO  : create a generic function that read contents of directory 
+  
   while (  (dirp = readdir(sysmod))  != _nullable )  { 
     
-    if ( dirp->d_type  ==  DT_DIR &&   dirp->d_name[0] !=  '.'/** escape  ./ ../ and hidden directory */) { 
+    if ( dirp->d_type  ==  DT_DIR &&   dirp->d_name[0] !=  HIDDIRENT /** escape  ./ ../ and hidden directory */) { 
       
        //! clean first 
        explicit_bzero((lkmd->modules_names+index), MAX_LOADABLE_MDLS) ;
       
        uchar_t  match  = 0 ;
-       while ( match <= modlive ) 
+       while ( match <= kmodlive ) 
        { 
          /** Check match */
          if(strcmp((lkmd->modules+match)->name  , dirp->d_name) ==  0) {
-          //!lkmd_log("%s" ,  dirp->d_name) ; 
-
-           lkmd->total_of_live_module++ ; 
+           //lkmd_log("%s" ,  dirp->d_name) ; 
+           lkmd->total_of_live_module++  ; 
          }
          match++ ; 
        }
        memcpy( (lkmd->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
-       //memset( (lkmd->modules_names+index+2) ,  0 ,1 ) ; 
 
        //printf("%s::\n", (char*)(lkmd->modules_names+index)) ; 
        index++ ;
     }
   }
 
-  lkmd->modules_names[index+1]= _nullable ; 
+  lkmd->modules_names[index+1]= _nullable ;// raw modules  
   lkmd->total_of_module = index; 
-  
+ 
+
   return   lkmd ; 
 }
 
@@ -173,14 +177,15 @@ void lkmd_list_all_module_found ( const struct __lkmd_t *  lkmd )
   lkmd_log(">>>%i", index) ; 
 }
 
-void  lkmd_list_live_modules( const struct __lkmd_t  *restrict lkmd )   
+void  lkmd_list_live_modules( const struct __lkmd_t  *restrict  lkmd )   
 {
   __check_nonull(lkmd); 
-  uchar_t  index  = 0 ;  
-  
-  while (  lkmd->total_of_live_module > index ) 
+  int  index  = 0 ;  
+ 
+  while (  index  < lkmd->total_of_live_module )  
   {
-     lkmd_log("%s" , (char*)(lkmd->modules+index++)) ; 
+     lkmd_log("%s" , (char *) (lkmd->modules+index)->name) ;   
+     index++; 
   }
 }
 
@@ -196,15 +201,7 @@ void  * lkmd_release( struct __lkmd_t *  restrict  lkmd )
    __check_nonull(lkmd); 
    __check_nonull(lkmd->modules) ; 
    
-
-   int i = 0 ;
-   puts("sda") ; 
-   while ( lkmd->total_of_live_module  > i   ) 
-   {
-     free( (lkmd->modules+i) );  
-     i++ ; 
-   }
-  
+   free(lkmd->modules) ;
 
    return  lkmd->modules ;  
 }

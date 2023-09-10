@@ -30,18 +30,12 @@ main (int __ac  , char ** __av)
   lkmd_t  module_list ;   
   lkmd_syspath_open(LKMD_LINUX_SYSMOD, &module_list)  ; 
  
-  lkmd_list_all_module_found(&module_list) ; 
-  
-  //int count =  lkmd_count_loaded_modules(&module_list) ;  
-  
-  //lkmd_log("loaded module : %i" , count );
-  //
-  //
-  if ( lkmd_release(&module_list)  ==  _nullable ) 
-  {
-    puts("cleaned"); 
-  }
-  
 
+  lkmd_list_live_modules(&module_list) ; 
+
+  
+  
+  (void *) lkmd_release(&module_list) ;  
+ 
   return EXIT_SUCCESS ; 
 }

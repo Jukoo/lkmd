@@ -22,6 +22,8 @@
 
 #define LKMD_TAG   "LKMD"
 
+#define HIDDIRENT  0x2e
+
 
 #define  lkmd_log(__mesg , ...) ({\
     char smesg[MAX_LOADABLE_MDLS]  ={ 0 } ; \
@@ -77,8 +79,8 @@ struct  __lkmd_t  {
   char root_path[0x14] ; 
   char *modules_names[MAX_LOADABLE_MDLS] ; 
   int   total_of_module;
-  int   total_of_live_module; 
   
+  int   total_of_live_module; 
   struct __mod_t * modules ; 
 } ; 
 
@@ -141,7 +143,7 @@ int  lkmd_count_loaded_modules (const struct  __lkmd_t * __restrict__ __lkmd ) ;
  *  @param const struct __lkmd_t  *  
  *  @return void 
  */ 
-void lkmd_list_live_modules(const struct __lkmd_t *  lkmd) ; 
+void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd) ; 
 
 /** @fn lkmd_release ( struct __lkmd_t *)
  *  @brief clean allocated  mod_t a.k.a  struct  __mod_t 
