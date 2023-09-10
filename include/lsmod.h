@@ -18,16 +18,17 @@
  * Give default value when MAX_LOADABLE_MDLS is not set 
  * compile time flags  
  */ 
-
 #ifndef  MAX_LOADABLE_MDLS
 #define  MAX_LOADABLE_MDLS ( sizeof(void*) << 6 )  
-#endif   //! MAX_LOADABLE_MDLS 
+#endif   
+
+#define LSMOD_TAG   "LSMOD"
 
 
 #define  lsmod_log(__mesg , ...) ({\
     char smesg[MAX_LOADABLE_MDLS]  ={ 0 } ; \
     sprintf(smesg , __mesg , ##__VA_ARGS__) ; \
-    fprintf(stdout , "[%s]:: %s\n" ,"LSMOD" , smesg);\
+    fprintf(stdout , "[%s]:: %s\n" ,LSMOD_TAG , smesg);\
     })
 
 #define  lsmod_errx(__exit_code, __mesg , ...) ( {\
@@ -52,6 +53,10 @@ enum {
 #define  LSMOD_LINUX_PROCMOD f_gnu_linux_sys_proc_modules
 } ; 
 
+enum { 
+  LSMOD_LINUX_RAW_MODULE ,
+  LSMOD_LINUX_MATCH_LIVE_MODULE
+};
 
 //! lsmod internal error code  
 enum { 
@@ -74,6 +79,7 @@ struct  __lsmod_t  {
   char root_path[0x14] ; 
   char *modules_names[MAX_LOADABLE_MDLS] ; 
   int   total_of_module;
+  int   total_of_live_module; 
   
   struct __mod_t * modules ; 
 } ; 
@@ -99,12 +105,52 @@ struct __mod_t {
  */ 
 struct __mod_t *  lsmod_load_live_sysprocmod(void) ;
 
-
+/** @fn  l  
+ *
+ */ 
 void *  lsmod_syspath_open (const char  *  __restrict__  __gnu_linux__syspath  , struct __lsmod_t *)  ; 
 
+/** @fn static void * lsmod_extract( const char * , struct __mod_t * )  
+ *  @brief extract the need information from __buff  parameter 
+ *         which is a single line  and dump it into  __mod_t structure 
+ *  @param  const char  * __inline_buffer 
+ *  @param  struct __mod_t *  ( see  struct  __mod_t data structure ) 
+ *  @return  void *  
+ *
+ */ 
+static  void *  lsmod_extract( const char * __inline_buffer  ,  struct __mod_t *  ) ; 
 
-static  void *  lsmod_extract( const char * __buff  ,  struct __mod_t *  ) ; 
-int  lsmod_count_loaded_modules (const struct  __lsmod_t * lsmod ) ; 
-void   lsmod_list_all_module_found (const  struct __lsmod_t *__restrict__  lsmod) ;  
+/** @fn  void lsmod_list_all_module_found( const struct __lsmod_t * ) 
+ *  @brief list all modules found in the host even the unloaded  modules 
+ *
+ *  @param const struct __lsmod_t *  
+ *  @return void 
+ */ 
+void   lsmod_list_all_module_found (const  struct __lsmod_t * _lsmod) ; 
+
+/** @fn lsmod_count_loaded_modules  (const struct __lsmod_t * ) 
+ *  @brief count all modules available 
+ *  
+ *  @param const struct __lsmod_t * 
+ *  @return  int  - number of all modules  even not loaded 
+ */ 
+
+int  lsmod_count_loaded_modules (const struct  __lsmod_t * __restrict__ __lsmod ) ;
+
+/** @fn lsmod_list_live_modules (const struct  __lsmod_t *) 
+ *  @brief list  only live modules 
+ *
+ *  @param const struct __lsmod_t  *  
+ *  @return void 
+ */ 
+void lsmod_list_live_modules(const struct __lsmod_t *  lsmod) ; 
+
+/** @fn lsmod_release ( struct __lsmod_t *)
+ *  @brief clean allocated  mod_t a.k.a  struct  __mod_t 
+ *
+ *  @param struct  __lsmod_t * 
+ *  @return void * should be null  for Success 
+ */ 
+void * lsmod_release(struct __lsmod_t * __restrict__ __lsmod); 
 
 #endif /** _lsmod_extra_plus*/ 

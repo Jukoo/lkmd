@@ -6,7 +6,7 @@
 
 #include <stdlib.h> 
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/stat.h> 
 #include <dirent.h>  
 #include <stdio.h> 
@@ -60,7 +60,7 @@ static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt)
 
   char *local_buff = (char *)inbuff ; 
   
-  char *token  = strtok(local_buff , " ")  ; 
+  char *token  = strtok(local_buff ,   " ")  ; 
 
   uchar_t  stage = 0; 
   while ( token != _nullable  ) 
@@ -114,9 +114,9 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
  
   memcpy(lsmod->root_path ,  gl_syspath , strlen(gl_syspath)) ; 
   
-  struct dirent  * dirp = _nullable ;  
+  struct dirent  * dirp = _nullable ; 
   
-  uchar_t index   = 0 ;  
+  uchar_t index   = 0 ; 
   //!  TODO  : create a generic function that read contents of directory 
   while (  (dirp = readdir(sysmod))  != _nullable )  { 
     
@@ -131,24 +131,26 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
          /** Check match */
          if(strcmp((lsmod->modules+match)->name  , dirp->d_name) ==  0) {
           //!lsmod_log("%s" ,  dirp->d_name) ; 
+
+           lsmod->total_of_live_module++ ; 
          }
          match++ ; 
        }
        memcpy( (lsmod->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
+       //memset( (lsmod->modules_names+index+2) ,  0 ,1 ) ; 
 
-
-       printf("%s::\n", (char*)(lsmod->modules_names+index)) ; 
+       //printf("%s::\n", (char*)(lsmod->modules_names+index)) ; 
        index++ ;
     }
   }
- 
+
   lsmod->modules_names[index+1]= _nullable ; 
   lsmod->total_of_module = index; 
   
   return   lsmod ; 
 }
 
-void lsmod_list_all_module_found ( const struct __lsmod_t * restrict   lsmod  ) 
+void lsmod_list_all_module_found ( const struct __lsmod_t *  lsmod ) 
 {
   /**  NOTE: depending  on parameter 
    *   -> load loaded module  or load all module from LSMOD_LINUX_SYSMOD **/
@@ -156,16 +158,31 @@ void lsmod_list_all_module_found ( const struct __lsmod_t * restrict   lsmod  )
   
   uchar_t index =0  ;
 
-  //! That show all module from  LSMOD_LINUX_SYSMOD  
+  //! That show all module from  LSMOD_LINUX_SYSMOD 
+  char tmp_buffer[MAX_LOADABLE_MDLS] = { 0 }  ; 
   while  (  lsmod->modules_names[index]   != _nullable )  {
-    
-    lsmod_log("%s" , (char *)(lsmod->modules_names+index)) ; 
+   
+    /** FIXME  <later> :  doesn't show very well  */
+    memcpy(tmp_buffer ,  (lsmod->modules_names+index) , MAX_LOADABLE_MDLS)  ; 
+    printf("%s\n" ,  tmp_buffer) ; 
+
+    explicit_bzero(tmp_buffer, MAX_LOADABLE_MDLS);
     index++; 
   }
   
-  printf("-----\ntotal of kmod : %i \n", index) ; 
+  lsmod_log(">>>%i", index) ; 
 }
 
+void  lsmod_list_live_modules( const struct __lsmod_t  *restrict lsmod )   
+{
+  __check_nonull(lsmod); 
+  uchar_t  index  = 0 ;  
+  
+  while (  lsmod->total_of_live_module > index ) 
+  {
+     lsmod_log("%s" , (char*)(lsmod->modules+index++)) ; 
+  }
+}
 
 int  lsmod_count_loaded_modules (  const struct __lsmod_t *  lsmod)  
 {
@@ -174,5 +191,31 @@ int  lsmod_count_loaded_modules (  const struct __lsmod_t *  lsmod)
    return  lsmod->total_of_module ;  
 }
 
+void  * lsmod_release( struct __lsmod_t *  restrict  lsmod )  
+{
+   __check_nonull(lsmod); 
+   __check_nonull(lsmod->modules) ; 
+   
 
+   int i = 0 ;
+   puts("sda") ; 
+   while ( lsmod->total_of_live_module  > i   ) 
+   {
+     free( (lsmod->modules+i) );  
+     i++ ; 
+   }
+  
+
+   return  lsmod->modules ;  
+}
+
+/** 
+ * NOTE :  
+ * lsmod -s search  module  
+ * lsmod -I info module  [ if no module is specified ] that check the current workdir 
+ * lsmod -v version of lsmod 
+ * lsmod -h help version 
+ * lsmod -km  --kernel-mesg  or -dmesg 
+ *
+ */ 
 
