@@ -1,4 +1,4 @@
-/** @file  lsmod.c 
+/** @file  lkmd.c 
  *  @brief lsmod command like with some extra  feature 
  *  @author Umar  Ba , LoopFocus ,jUmarB@protonmail.com 
  *  
@@ -18,15 +18,15 @@
 #include <fcntl.h> 
 
 
-#include "include/lsmod.h" 
+#include "include/lkmd.h" 
 
 
 static int modlive = 0;  
 
-struct  __mod_t *lsmod_load_live_sysprocmod (void) 
+struct  __mod_t *lkmd_load_live_sysprocmod (void) 
 {
     
-    int  pmod_fd  = open ( LSMOD_LINUX_PROCMOD , O_RDONLY ) ; 
+    int  pmod_fd  = open ( LKMD_LINUX_PROCMOD , O_RDONLY ) ; 
     
     if (pmod_fd  <= ~0 ) { 
       errx ( pmod_fd  ,  "OPEN STREAM  ERROR") ; 
@@ -34,7 +34,7 @@ struct  __mod_t *lsmod_load_live_sysprocmod (void)
     
     if (  dup2(pmod_fd , STDIN_FILENO)  <= ~0 ) 
     {
-      lsmod_errx(LSMOD_DUP_STREAM_ERR , "stream duplication error") ; 
+      lkmd_errx(LKMD_DUP_STREAM_ERR , "stream duplication error") ; 
     }
    
     //! TODO : do no forget  to free all 
@@ -45,7 +45,7 @@ struct  __mod_t *lsmod_load_live_sysprocmod (void)
     int  index  = 0  ; 
     while ( (fgets(inline_buffer,  MAX_LOADABLE_MDLS << 3 , stdin)) != _nullable) 
     {
-      lsmod_extract(inline_buffer , (modules_collection+index)) ;  
+      lkmd_extract(inline_buffer , (modules_collection+index)) ;  
       index++ ; 
     }
 
@@ -55,7 +55,7 @@ struct  __mod_t *lsmod_load_live_sysprocmod (void)
 } 
 
 //! just parse  inline string  
-static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt) 
+static void * lkmd_extract(const char * inbuff  , struct  __mod_t * modt) 
 {
 
   char *local_buff = (char *)inbuff ; 
@@ -66,17 +66,17 @@ static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt)
   while ( token != _nullable  ) 
   {
     switch (stage) { 
-      case LSMOD_MODULE_NAME :  
+      case LKMD_MODULE_NAME :  
         memcpy(modt->name ,  token ,  strlen(token)) ;
-        //lsmod_log("%s" , modt->name) ; 
+        //lkmd_log("%s" , modt->name) ; 
         break ; 
-      case  LSMOD_MODULE_SIZE : 
+      case  LKMD_MODULE_SIZE : 
         modt->size = strtol(token ,  _nullable , 0xa) ;  
         break ; 
-      case  LSMOD_MODULE_XUSED:
+      case  LKMD_MODULE_XUSED:
         modt->n_usedby = strtol(token,  _nullable  ,0xa) ;  
         break ; 
-      case  LSMOD_MODULE_USEDBY: 
+      case  LKMD_MODULE_USEDBY: 
         if ( *token  == '-' ) break ; 
         memcpy(modt->m_usedby , token ,  strlen(token)) ; 
         break ; 
@@ -91,17 +91,17 @@ static void * lsmod_extract(const char * inbuff  , struct  __mod_t * modt)
 }
 
 
-void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t * lsmod )    
+void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * lkmd )    
 {
 
  
-  //mod_t  * modules = lsmod_load_live_sysprocmod()  ;
+  //mod_t  * modules = lkmd_load_live_sysprocmod()  ;
 
-  lsmod->modules = lsmod_load_live_sysprocmod();  
+  lkmd->modules = lkmd_load_live_sysprocmod();  
  
   int  sysmod_fd =   open (gl_syspath ,  O_RDONLY) ; 
   if (sysmod_fd <=~0)  { 
-    lsmod_errx(LSMOD_UKN_SYS_PATH  , "Not a Valid Path :: error code %s\n" , strerror(errno)) ; 
+    lkmd_errx(LKMD_UKN_SYS_PATH  , "Not a Valid Path :: error code %s\n" , strerror(errno)) ; 
   }
 
   DIR* sysmod =  _nullable ; 
@@ -112,7 +112,7 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
     return   _nullable ; 
   }  
  
-  memcpy(lsmod->root_path ,  gl_syspath , strlen(gl_syspath)) ; 
+  memcpy(lkmd->root_path ,  gl_syspath , strlen(gl_syspath)) ; 
   
   struct dirent  * dirp = _nullable ; 
   
@@ -123,99 +123,99 @@ void *  lsmod_syspath_open(const char * restrict  gl_syspath , struct __lsmod_t 
     if ( dirp->d_type  ==  DT_DIR &&   dirp->d_name[0] !=  '.'/** escape  ./ ../ and hidden directory */) { 
       
        //! clean first 
-       explicit_bzero((lsmod->modules_names+index), MAX_LOADABLE_MDLS) ;
+       explicit_bzero((lkmd->modules_names+index), MAX_LOADABLE_MDLS) ;
       
        uchar_t  match  = 0 ;
        while ( match <= modlive ) 
        { 
          /** Check match */
-         if(strcmp((lsmod->modules+match)->name  , dirp->d_name) ==  0) {
-          //!lsmod_log("%s" ,  dirp->d_name) ; 
+         if(strcmp((lkmd->modules+match)->name  , dirp->d_name) ==  0) {
+          //!lkmd_log("%s" ,  dirp->d_name) ; 
 
-           lsmod->total_of_live_module++ ; 
+           lkmd->total_of_live_module++ ; 
          }
          match++ ; 
        }
-       memcpy( (lsmod->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
-       //memset( (lsmod->modules_names+index+2) ,  0 ,1 ) ; 
+       memcpy( (lkmd->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
+       //memset( (lkmd->modules_names+index+2) ,  0 ,1 ) ; 
 
-       //printf("%s::\n", (char*)(lsmod->modules_names+index)) ; 
+       //printf("%s::\n", (char*)(lkmd->modules_names+index)) ; 
        index++ ;
     }
   }
 
-  lsmod->modules_names[index+1]= _nullable ; 
-  lsmod->total_of_module = index; 
+  lkmd->modules_names[index+1]= _nullable ; 
+  lkmd->total_of_module = index; 
   
-  return   lsmod ; 
+  return   lkmd ; 
 }
 
-void lsmod_list_all_module_found ( const struct __lsmod_t *  lsmod ) 
+void lkmd_list_all_module_found ( const struct __lkmd_t *  lkmd ) 
 {
   /**  NOTE: depending  on parameter 
-   *   -> load loaded module  or load all module from LSMOD_LINUX_SYSMOD **/
-  if ( lsmod  == _nullable) return  ;
+   *   -> load loaded module  or load all module from LKMD_LINUX_SYSMOD **/
+  if ( lkmd  == _nullable) return  ;
   
   uchar_t index =0  ;
 
-  //! That show all module from  LSMOD_LINUX_SYSMOD 
+  //! That show all module from  LKMD_LINUX_SYSMOD 
   char tmp_buffer[MAX_LOADABLE_MDLS] = { 0 }  ; 
-  while  (  lsmod->modules_names[index]   != _nullable )  {
+  while  (  lkmd->modules_names[index]   != _nullable )  {
    
     /** FIXME  <later> :  doesn't show very well  */
-    memcpy(tmp_buffer ,  (lsmod->modules_names+index) , MAX_LOADABLE_MDLS)  ; 
+    memcpy(tmp_buffer ,  (lkmd->modules_names+index) , MAX_LOADABLE_MDLS)  ; 
     printf("%s\n" ,  tmp_buffer) ; 
 
     explicit_bzero(tmp_buffer, MAX_LOADABLE_MDLS);
     index++; 
   }
   
-  lsmod_log(">>>%i", index) ; 
+  lkmd_log(">>>%i", index) ; 
 }
 
-void  lsmod_list_live_modules( const struct __lsmod_t  *restrict lsmod )   
+void  lkmd_list_live_modules( const struct __lkmd_t  *restrict lkmd )   
 {
-  __check_nonull(lsmod); 
+  __check_nonull(lkmd); 
   uchar_t  index  = 0 ;  
   
-  while (  lsmod->total_of_live_module > index ) 
+  while (  lkmd->total_of_live_module > index ) 
   {
-     lsmod_log("%s" , (char*)(lsmod->modules+index++)) ; 
+     lkmd_log("%s" , (char*)(lkmd->modules+index++)) ; 
   }
 }
 
-int  lsmod_count_loaded_modules (  const struct __lsmod_t *  lsmod)  
+int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)  
 {
-   __check_nonull(lsmod) ; 
+   __check_nonull(lkmd) ; 
   
-   return  lsmod->total_of_module ;  
+   return  lkmd->total_of_module ;  
 }
 
-void  * lsmod_release( struct __lsmod_t *  restrict  lsmod )  
+void  * lkmd_release( struct __lkmd_t *  restrict  lkmd )  
 {
-   __check_nonull(lsmod); 
-   __check_nonull(lsmod->modules) ; 
+   __check_nonull(lkmd); 
+   __check_nonull(lkmd->modules) ; 
    
 
    int i = 0 ;
    puts("sda") ; 
-   while ( lsmod->total_of_live_module  > i   ) 
+   while ( lkmd->total_of_live_module  > i   ) 
    {
-     free( (lsmod->modules+i) );  
+     free( (lkmd->modules+i) );  
      i++ ; 
    }
   
 
-   return  lsmod->modules ;  
+   return  lkmd->modules ;  
 }
 
 /** 
  * NOTE :  
- * lsmod -s search  module  
- * lsmod -I info module  [ if no module is specified ] that check the current workdir 
- * lsmod -v version of lsmod 
- * lsmod -h help version 
- * lsmod -km  --kernel-mesg  or -dmesg 
+ * lkmd -s search  module  
+ * lkmd -I info module  [ if no module is specified ] that check the current workdir 
+ * lkmd -v version of lkmd 
+ * lkmd -h help version 
+ * lkmd -km  --kernel-mesg  or -dmesg 
  *
  */ 
 

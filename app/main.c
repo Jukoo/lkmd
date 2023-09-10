@@ -1,5 +1,5 @@
-/** @file  lsmod.c 
- *  @brief lsmod command like with some extra  feature 
+/** @file  lkmd.c 
+ *  @brief lkmd command like with some extra  feature 
  *  @author Umar  Ba , LoopFocus ,jUmarB@protonmail.com 
  *  
  *  @todo  : 
@@ -15,10 +15,10 @@
 #include <err.h> 
 #include <stdio.h> 
 
-#define LSMOD_TAG  "LSMOD" 
+#define LKMD_TAG  "LKMD" 
 
 
-#include "../include/lsmod.h" 
+#include "../include/lkmd.h" 
 
 
 
@@ -27,17 +27,17 @@ main (int __ac  , char ** __av)
 {
  
 
-  lsmod_t  module_list ;   
-  lsmod_syspath_open(LSMOD_LINUX_SYSMOD, &module_list)  ; 
+  lkmd_t  module_list ;   
+  lkmd_syspath_open(LKMD_LINUX_SYSMOD, &module_list)  ; 
  
-  lsmod_list_all_module_found(&module_list) ; 
+  lkmd_list_all_module_found(&module_list) ; 
   
-  //int count =  lsmod_count_loaded_modules(&module_list) ;  
+  //int count =  lkmd_count_loaded_modules(&module_list) ;  
   
-  //lsmod_log("loaded module : %i" , count );
+  //lkmd_log("loaded module : %i" , count );
   //
   //
-  if ( lsmod_release(&module_list)  ==  _nullable ) 
+  if ( lkmd_release(&module_list)  ==  _nullable ) 
   {
     puts("cleaned"); 
   }
