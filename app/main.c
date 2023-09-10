@@ -18,7 +18,7 @@
 #define LKMD_TAG  "LKMD" 
 
 
-#include "../include/lkmd.h" 
+#include "lkmd.h" 
 
 
 
