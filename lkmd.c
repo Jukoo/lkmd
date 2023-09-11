@@ -21,7 +21,9 @@
 #include "include/lkmd.h" 
 
 
-static int kmodlive = 0;  
+static int kmodlive = 0;
+
+static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ; 
 
 static struct  __mod_t *lkmd_load_live_sysprocmod (void) 
 {
@@ -138,13 +140,13 @@ void *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * l
          match++ ; 
        }
        memcpy( (lkmd->modules_names+index), dirp->d_name ,  strlen(dirp->d_name) );
-
+       memcpy((raw_kmod+index) ,dirp->d_name ,  strlen(dirp->d_name) ) ; 
        //printf("%s::\n", (char*)(lkmd->modules_names+index)) ; 
        index++ ;
     }
   }
 
-  lkmd->modules_names[index+1]= _nullable ;// raw modules  
+  lkmd->modules_names[index+1]=  _nullable ;  
   lkmd->total_of_module = index; 
  
 
@@ -160,18 +162,15 @@ void lkmd_list_all_module_found ( const struct __lkmd_t *  lkmd )
   uchar_t index =0  ;
 
   //! That show all module from  LKMD_LINUX_SYSMOD 
-  char tmp_buffer[MAX_LOADABLE_MDLS] = { 0 }  ; 
-  while  (  lkmd->modules_names[index]   != _nullable )  {
+  while  (  index <  lkmd->total_of_module)  {
    
-    /** FIXME  <later> :  doesn't show very well  */
-    memcpy(tmp_buffer ,  (lkmd->modules_names+index) , MAX_LOADABLE_MDLS)  ; 
-    printf("%s\n" ,  tmp_buffer) ; 
-
-    explicit_bzero(tmp_buffer, MAX_LOADABLE_MDLS);
+    
+    lkmd_log("%s",(char *)(raw_kmod+index)) ; 
     index++; 
   }
   
-  lkmd_log(">>>%i", index) ; 
+  lkmd_log("total  of all modules  : %i" , lkmd->total_of_module) ;
+  lkmd_log("total  of live modules  : %i" , lkmd->total_of_live_module) ;
 }
 
 void  lkmd_list_live_modules( const struct __lkmd_t  *restrict  lkmd )   

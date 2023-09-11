@@ -30,8 +30,8 @@ main (int __ac  , char ** __av)
   lkmd_t  module_list ;   
   lkmd_syspath_open(_nullable, &module_list)  ; 
  
-
-  lkmd_list_live_modules(&module_list) ; 
+  lkmd_list_all_module_found(&module_list) ; 
+  //lkmd_list_live_modules(&module_list) ; 
 
   
   
