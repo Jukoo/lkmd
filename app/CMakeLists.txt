@@ -3,6 +3,8 @@ project(lkmd.elfbin  VERSION  1.0)
 
 add_executable(${PROJECT_NAME} main.c) 
 
+#++  enable  Debug symbol 
+set(CMAKE_BUILD_TYPE  Debug)
 target_link_directories(${PROJECT_NAME}  PRIVATE ../build) 
 target_include_directories(${PROJECT_NAME}  PRIVATE  ../include)
 

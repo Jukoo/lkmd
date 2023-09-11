@@ -103,12 +103,12 @@ struct __mod_t {
  *  @param void 
  *  @return  array of  mod_t *  struct 
  */ 
-struct __mod_t *  lkmd_load_live_sysprocmod(void) ;
+static struct __mod_t *  lkmd_load_live_sysprocmod(void) ;
 
 /** @fn  l  
  *
  */ 
-void *  lkmd_syspath_open (const char  *  __restrict__  __gnu_linux__syspath  , struct __lkmd_t *)  ; 
+void *  lkmd_syspath_open (const char  * __restrict__  __gnu_linux__syspath  , struct __lkmd_t *)  ; 
 
 /** @fn static void * lkmd_extract( const char * , struct __mod_t * )  
  *  @brief extract the need information from __buff  parameter 

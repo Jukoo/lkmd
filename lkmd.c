@@ -23,7 +23,7 @@
 
 static int kmodlive = 0;  
 
-struct  __mod_t *lkmd_load_live_sysprocmod (void) 
+static struct  __mod_t *lkmd_load_live_sysprocmod (void) 
 {
     
     int  pmod_fd  = open ( LKMD_LINUX_PROCMOD , O_RDONLY ) ; 
@@ -90,15 +90,11 @@ static void * lkmd_extract(const char * inbuff  , struct  __mod_t * modt)
 }
 
 
-void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * lkmd )    
+void *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * lkmd )    
 {
-
  
-  char sysmpath[MAX_LOADABLE_MDLS >> 3]  = { 0 } ; 
-  if ( gl_syspath == _nullable ) 
-  {
-     memcpy(sysmpath , LKMD_LINUX_SYSMOD , strlen(LKMD_LINUX_SYSMOD)) ;  
-  }else  { 
+  char sysmpath[MAX_LOADABLE_MDLS]  = LKMD_LINUX_SYSMOD ; 
+  if (gl_syspath != _nullable ) { 
      memcpy(sysmpath , gl_syspath , strlen(gl_syspath)) ; 
   }
 
@@ -116,9 +112,10 @@ void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * 
   if (sysmod == _nullable) {
     close(sysmod_fd) ;   
     return   _nullable ; 
-  }  
+  } 
+
  
-  memcpy(lkmd->root_path ,  gl_syspath , strlen(gl_syspath)) ; 
+  memcpy(lkmd->root_path ,  sysmpath  , strlen(sysmpath)) ; 
   
   struct dirent  * dirp = _nullable ; 
   uchar_t index   = 0 ; 
@@ -133,7 +130,7 @@ void *  lkmd_syspath_open(const char * restrict  gl_syspath , struct __lkmd_t * 
        uchar_t  match  = 0 ;
        while ( match <= kmodlive ) 
        { 
-         /** Check match */
+         /** Check live  modules*/
          if(strcmp((lkmd->modules+match)->name  , dirp->d_name) ==  0) {
            //lkmd_log("%s" ,  dirp->d_name) ; 
            lkmd->total_of_live_module++  ; 
