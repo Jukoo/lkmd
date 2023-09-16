@@ -34,7 +34,11 @@
 #define  lkmd_errx(__exit_code, __mesg , ...) ( {\
     if(__exit_code == 0) warn("%s@%i : exit_code Reserved for ESUCESS\n", __FILE__ ,__LINE__); \
     errx(__exit_code , __mesg , ##__VA_ARGS__) ; \
-    }) 
+    })
+
+#define  lkmd_warn( __mesg , ... ) ( { \
+    warn(__mesg ,  ##__VA_ARGS__) ; \
+    })
 
 #define  __check_nonull(x) if  (x == _Nullable)  \
                                    errx(~0 , "Abort") ; 
@@ -74,7 +78,7 @@ enum {
   //0x000000  - unused   
 } ; 
 
-typedef struct  __lkmd_t  lkmd_t ; 
+typedef struct  __lkmd_t  lkmd_t ; //raw modules  lkmd_raw_t  
 struct  __lkmd_t  {
   char root_path[0x14] ; 
   char *modules_names[MAX_LOADABLE_MDLS] ; 
@@ -88,7 +92,7 @@ struct  __lkmd_t  {
 typedef  unsigned long int   modsize_t  ; 
 typedef  unsigned char       uchar_t ; 
 
-typedef  struct __mod_t  mod_t  ; 
+typedef  struct __mod_t  mod_t  ; //! live  modules  lkmd_live_t   
 struct __mod_t { 
   char name[MAX_LOADABLE_MDLS >> 3]  ; 
   modsize_t  size ;
@@ -108,7 +112,7 @@ static struct __mod_t *  lkmd_load_live_sysprocmod(void) ;
 /** @fn  l  
  *
  */ 
-void *  lkmd_syspath_open (const char  * __restrict__  __gnu_linux__syspath  , struct __lkmd_t *)  ; 
+struct __lkmd_t *  lkmd_syspath_open (const char  * __restrict__  __gnu_linux__syspath  , struct __lkmd_t *)  ; 
 
 /** @fn static void * lkmd_extract( const char * , struct __mod_t * )  
  *  @brief extract the need information from __buff  parameter 
@@ -136,6 +140,8 @@ void   lkmd_list_all_module_found (const  struct __lkmd_t * _lkmd) ;
  */ 
 
 int  lkmd_count_loaded_modules (const struct  __lkmd_t * __restrict__ __lkmd ) ;
+
+int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ; 
 
 /** @fn lkmd_list_live_modules (const struct  __lkmd_t *) 
  *  @brief list  only live modules 

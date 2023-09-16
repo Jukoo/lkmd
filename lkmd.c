@@ -46,6 +46,7 @@ static struct  __mod_t *lkmd_load_live_sysprocmod (void)
     int  index  = 0  ; 
     while ( (fgets(inline_buffer,  MAX_LOADABLE_MDLS << 3 , stdin)) != _nullable) 
     {
+      /** parse  inline buffer and extract the needed information  and dump it into  modules_collection[index]*/
       lkmd_extract(inline_buffer , (modules_collection+index)) ;  
       index++ ; 
     }
@@ -92,7 +93,7 @@ static void * lkmd_extract(const char * inbuff  , struct  __mod_t * modt)
 }
 
 
-void *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * lkmd )    
+struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * lkmd )    
 {
  
   char sysmpath[MAX_LOADABLE_MDLS]  = LKMD_LINUX_SYSMOD ; 
@@ -126,7 +127,6 @@ void *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * l
     
     if ( dirp->d_type  ==  DT_DIR &&   dirp->d_name[0] !=  HIDDIRENT /** escape  ./ ../ and hidden directory */) { 
       
-       //! clean first 
        explicit_bzero((lkmd->modules_names+index), MAX_LOADABLE_MDLS) ;
       
        uchar_t  match  = 0 ;
@@ -190,6 +190,13 @@ int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)
    __check_nonull(lkmd) ; 
   
    return  lkmd->total_of_module ;  
+}
+
+int lkmd_count_live_modules(const struct __lkmd_t *restrict lkmd)
+{
+  __check_nonull(lkmd);
+  __check_nonull(lkmd->modules); 
+  return lkmd->total_of_live_module ; 
 }
 
 void  * lkmd_release( struct __lkmd_t *  restrict  lkmd )  
