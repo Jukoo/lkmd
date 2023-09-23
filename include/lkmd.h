@@ -112,7 +112,7 @@ static struct __mod_t *  lkmd_load_live_sysprocmod(void) ;
 /** @fn  l  
  *
  */ 
-struct __lkmd_t *  lkmd_syspath_open (const char  * __restrict__  __gnu_linux__syspath  , struct __lkmd_t *)  ; 
+struct __lkmd_t *  lkmd_syspath_open (const char  * __restrict__  __syspath  , struct __lkmd_t *)  ; 
 
 /** @fn static void * lkmd_extract( const char * , struct __mod_t * )  
  *  @brief extract the need information from __buff  parameter 
@@ -130,8 +130,10 @@ static  void *  lkmd_extract( const char * __inline_buffer  ,  struct __mod_t * 
  *  @param const struct __lkmd_t *  
  *  @return void 
  */ 
-void   lkmd_list_all_module_found (const  struct __lkmd_t * _lkmd) ; 
+void   lkmd_get_all_modules (const  struct __lkmd_t * _lkmd) ; 
 
+
+void  lkmd_get(const struct  __lkmd_t *  _lkmd   , int type ) ; 
 /** @fn lkmd_count_loaded_modules  (const struct __lkmd_t * ) 
  *  @brief count all modules available 
  *  
@@ -149,7 +151,8 @@ int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ;
  *  @param const struct __lkmd_t  *  
  *  @return void 
  */ 
-void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd) ; 
+//void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd ) ; 
+void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char __dumper[][m_size] ) ;
 
 /** @fn lkmd_release ( struct __lkmd_t *)
  *  @brief clean allocated  mod_t a.k.a  struct  __mod_t 
@@ -158,5 +161,9 @@ void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd) ;
  *  @return void * should be null  for Success 
  */ 
 void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
+
+
+
+void lkmd_list_dumper_contains ( const  unsigned char * size ,  const char __dumper[][*size] ) ; 
 
 #endif /** _lkmd*/ 

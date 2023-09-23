@@ -153,7 +153,7 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
   return   lkmd ; 
 }
 
-void lkmd_list_all_module_found ( const struct __lkmd_t *  lkmd ) 
+void lkmd_get_all_modules( const struct __lkmd_t *  lkmd ) 
 {
   /**  NOTE: depending  on parameter 
    *   -> load loaded module  or load all module from LKMD_LINUX_SYSMOD **/
@@ -173,23 +173,39 @@ void lkmd_list_all_module_found ( const struct __lkmd_t *  lkmd )
   lkmd_log("total  of live modules  : %i" , lkmd->total_of_live_module) ;
 }
 
-void  lkmd_list_live_modules( const struct __lkmd_t  *restrict  lkmd )   
+void  lkmd_get_live_modules( const struct __lkmd_t  *restrict  lkmd ,   int m_size , char dumper[][m_size])     
 {
   __check_nonull(lkmd); 
   int  index  = 0 ;  
- 
-  while (  index  < lkmd->total_of_live_module )  
+
+  if (  m_size > lkmd->total_of_live_module ) 
   {
-     lkmd_log("%s" , (char *) (lkmd->modules+index)->name) ;   
-     index++; 
+    warn ("overflow  request range (adjusting)") ; 
+    m_size = lkmd->total_of_live_module ; 
   }
+  
+  while ( index < m_size ) 
+  {
+    memcpy((dumper+index), (lkmd->modules+index)->name , strlen((lkmd->modules+index)->name) );
+    index++ ;  
+  }
+
+}
+
+
+void lkmd_get (  const struct __lkmd_t * restrict  lkmd ,  int type )  
+{
+  __check_nonull(lkmd); 
+  int index =0 ;
+  
+
 }
 
 int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)  
 {
    __check_nonull(lkmd) ; 
   
-   return  lkmd->total_of_module ;  
+   return  lkmd->total_of_module ; 
 }
 
 int lkmd_count_live_modules(const struct __lkmd_t *restrict lkmd)
