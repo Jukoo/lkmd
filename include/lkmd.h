@@ -106,7 +106,14 @@ struct __mod_t {
   uchar_t n_usedby ; 
   char    m_usedby[MAX_LOADABLE_MDLS <<  1 ] ; 
 } ;
-typedef  void (*lkmd_cb_getter) (const  struct __lkmd_t  *  , int s,  char dp[][s] ) ;  
+typedef  void (*lkmd_cb_getter) (const  struct __lkmd_t  *  , int s,  char dp[][s] ) ; 
+
+
+typedef  struct  __mod_request mrq_t  ; 
+struct  __mod_request { 
+  char  dump_register[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ;  
+  int   size  ;  
+} ; 
 
 
 /** @fn  void *lkmd_syspath_open  (const char *  , struct __lkmd_t* ) ; 
@@ -148,11 +155,14 @@ void   lkmd_get_raw_modules (const  struct __lkmd_t * _lkmd ,  int size ,  char 
  *  @return void 
  */ 
 //void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd ) ; 
-void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char __dumper[][m_size] ) ;
+void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char  (*__dumper)[MAX_LOADABLE_MDLS] ) ;
 
-void  lkmd_get_from_cb(const struct  __lkmd_t  * _lkmd , int size ,  char dp[][size] , lkmd_cb_getter );   
+//char (*(lkmd_get_live_modules_wr) (const struct __lkmd_t* __restrict__ lkmd , int __request_size ))[0xff] ; 
+struct __mod_request *lkmd_get_live_modules_mrq (const struct __lkmd_t* __restrict__ lkmd , int __request_size ,   struct __mod_request *  ) ;  
 
-void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char [][size]) ; 
+void  lkmd_get_from_cb(const struct  __lkmd_t  * _lkmd , int size ,  char (*dp)[size] , lkmd_cb_getter );   
+
+void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[size]) ; 
 
 /** @fn lkmd_count_loaded_modules  (const struct __lkmd_t * ) 
  *  @brief count all modules available 
@@ -175,6 +185,6 @@ int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ;
 void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
 
 //!show dumper on stdout ,  
-void lkmd_list_dumper_contains ( const  unsigned char * size ,  const char __dumper[][*size] ) ; 
+void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char __dumper[][size] ) ; 
 
 #endif /** _lkmd*/ 

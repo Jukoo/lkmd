@@ -23,7 +23,9 @@
 
 static int kmodlive = 0;
 
-static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ; 
+static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ;
+
+static char resquest[0xff][0xff] ={0} ;  
 
 static struct  __mod_t *lkmd_load_live_sysprocmod (void) 
 {
@@ -167,31 +169,42 @@ void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char 
   while  ( index  <  m_size  )  
   {   
     
-    memcpy( (dumper+index) , (raw_kmod+index) , strlen(raw_kmod[index]) ) ; 
+    memcpy(dumper[index] , (raw_kmod+index) , strlen(raw_kmod[index]) ) ; 
     index++; 
   }
     //lkmd_log("%s",(char *)(raw_kmod+index)) ; 
   
 }
 
-void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , char dumper[][m_size])     
+void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , char  (*dumper)[MAX_LOADABLE_MDLS])     
 {
   __check_nonull(lkmd->modules);
-  __overflow_adjust(m_size , lkmd->total_of_live_module) ;   
 
   int  index  = 0 ;  
   
   while ( index < m_size ) 
   {
     
-    lkmd_log("%s",(char *)(lkmd->modules+index)->name) ; 
-    memcpy((dumper+index), (lkmd->modules+index)->name , strlen((lkmd->modules+index)->name)+1  );
-    lkmd_log("dumper --%s",(char *)dumper[index] ) ; 
+    memcpy( (dumper+index),  (lkmd->modules+index)->name , MAX_LOADABLE_MDLS );
     index++ ;  
   } 
-  
-  memset( (dumper+index+1) ,  0 ,  0 ) ; 
 
+}
+
+
+struct __mod_request  * lkmd_get_live_modules_mrq(const struct __lkmd_t * lmkd  , int request_size ,  struct __mod_request  * mrq)   
+{
+  __check_nonull(lmkd->modules);
+  
+  int index = 0 ; 
+  while ( index <  request_size) 
+  {
+    memcpy((mrq->dump_register+index), (lmkd->modules+index)->name, 0xff); 
+    index++ ; 
+  }
+
+  memset ((mrq->dump_register+index+1) , 0 ,   0xff-request_size) ; 
+  return mrq ;
 }
 
 
@@ -212,7 +225,7 @@ void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char dp[
       lkmd_get_raw_modules(lkmd ,  size , dp) ;  
       break ; 
     case LKMD_LIVE_ONLY  : 
-      lkmd_get_live_modules(lkmd, size , dp) ; 
+      //lkmd_get_live_modules(lkmd, size , dp) ; 
       break ; 
     default : 
       //! thow error instead  ; 
@@ -245,6 +258,19 @@ void  * lkmd_release( struct __lkmd_t *  restrict  lkmd )
 
    return  lkmd->modules ;  
 }
+
+void lkmd_list_dumper_contains(const unsigned char size, const char (*dumper)[MAX_LOADABLE_MDLS]) 
+{
+  unsigned char  index = 0 ; 
+  while  ( index < size  ) 
+  {
+    lkmd_log("%s" , (char *)(dumper+index)) ; 
+    index++ ; 
+  }
+
+}
+
+
 
 /** 
  * NOTE :  

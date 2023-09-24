@@ -107,18 +107,21 @@ main (int __ac  , char ** __av)
   flarg  flags ; 
 
 
-  //arguments_parser(__ac, __av ,  &flags);   
+  arguments_parser(__ac, __av ,  &flags);   
 
 
   lkmd_t  module_list ;   
   lkmd_syspath_open(_nullable, &module_list)  ; 
  
-  char requested_modules[10][20];   
-  
-  lkmd_get_live_modules(&module_list ,  10 ,  requested_modules) ; 
-  
-    printf("%s\n",requested_modules[5]) ; 
  
+  mrq_t  request ; 
+ 
+  lkmd_get_live_modules(&module_list ,  flags.lines,  request.dump_register) ; 
+
+  lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 
+  
+
+  
   
   (void *) lkmd_release(&module_list) ;  
  
