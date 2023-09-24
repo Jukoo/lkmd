@@ -153,52 +153,73 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
   return   lkmd ; 
 }
 
-void lkmd_get_all_modules( const struct __lkmd_t *  lkmd ) 
+void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char dumper[][m_size] )  
 {
   /**  NOTE: depending  on parameter 
    *   -> load loaded module  or load all module from LKMD_LINUX_SYSMOD **/
-  if ( lkmd  == _nullable) return  ;
-  
+ 
+  __check_nonull(lkmd) ; 
+  __overflow_adjust(m_size , lkmd->total_of_module) ;  
   uchar_t index =0  ;
+  
 
   //! That show all module from  LKMD_LINUX_SYSMOD 
-  while  (  index <  lkmd->total_of_module)  {
-   
+  while  ( index  <  m_size  )  
+  {   
     
-    lkmd_log("%s",(char *)(raw_kmod+index)) ; 
+    memcpy( (dumper+index) , (raw_kmod+index) , strlen(raw_kmod[index]) ) ; 
     index++; 
   }
+    //lkmd_log("%s",(char *)(raw_kmod+index)) ; 
   
-  lkmd_log("total  of all modules  : %i" , lkmd->total_of_module) ;
-  lkmd_log("total  of live modules  : %i" , lkmd->total_of_live_module) ;
 }
 
-void  lkmd_get_live_modules( const struct __lkmd_t  *restrict  lkmd ,   int m_size , char dumper[][m_size])     
+void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , char dumper[][m_size])     
 {
-  __check_nonull(lkmd); 
-  int  index  = 0 ;  
+  __check_nonull(lkmd->modules);
+  __overflow_adjust(m_size , lkmd->total_of_live_module) ;   
 
-  if (  m_size > lkmd->total_of_live_module ) 
-  {
-    warn ("overflow  request range (adjusting)") ; 
-    m_size = lkmd->total_of_live_module ; 
-  }
+  int  index  = 0 ;  
   
   while ( index < m_size ) 
   {
-    memcpy((dumper+index), (lkmd->modules+index)->name , strlen((lkmd->modules+index)->name) );
+    
+    lkmd_log("%s",(char *)(lkmd->modules+index)->name) ; 
+    memcpy((dumper+index), (lkmd->modules+index)->name , strlen((lkmd->modules+index)->name)+1  );
+    lkmd_log("dumper --%s",(char *)dumper[index] ) ; 
     index++ ;  
-  }
+  } 
+  
+  memset( (dumper+index+1) ,  0 ,  0 ) ; 
 
 }
 
 
-void lkmd_get (  const struct __lkmd_t * restrict  lkmd ,  int type )  
+void  lkmd_get_from_cb (const struct __lkmd_t  * lkmd , int  size  , char dump_register[][size] ,  lkmd_cb_getter  lkmd_get_cb )  
 {
-  __check_nonull(lkmd); 
-  int index =0 ;
-  
+  __check_nonull(lkmd) ; 
+   
+  lkmd_get_cb(lkmd , size ,  dump_register) ; 
+}
 
+
+void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char dp[][size] )   
+{
+
+  switch(type) 
+  {
+    case LKMD_RAW_ONLY : 
+      lkmd_get_raw_modules(lkmd ,  size , dp) ;  
+      break ; 
+    case LKMD_LIVE_ONLY  : 
+      lkmd_get_live_modules(lkmd, size , dp) ; 
+      break ; 
+    default : 
+      //! thow error instead  ; 
+      return ; 
+      
+  }
+  
 }
 
 int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)  

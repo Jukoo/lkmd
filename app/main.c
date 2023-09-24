@@ -106,27 +106,19 @@ main (int __ac  , char ** __av)
 
   flarg  flags ; 
 
-  arguments_parser(__ac, __av ,  &flags);   
 
-  printf("numeric -> %i\n" ,flags.lines) ; 
+  //arguments_parser(__ac, __av ,  &flags);   
+
 
   lkmd_t  module_list ;   
   lkmd_syspath_open(_nullable, &module_list)  ; 
  
-  //lkmd_list_all_module_found(&module_list) ; 
-
-  char request[0xff][0xff] ={0};  
-  lkmd_list_live_modules(&module_list ,  flags.lines , request ) ; 
-
-  int i=0 ; 
-  while ( i <  flags.lines ) 
-  {
-    if ( strlen(request[i]) == 0   || i ==  flags.lines) break ; 
-    printf("%s\n",request[i]) ; 
-    i++  ; 
-  }
-
+  char requested_modules[10][20];   
   
+  lkmd_get_live_modules(&module_list ,  10 ,  requested_modules) ; 
+  
+    printf("%s\n",requested_modules[5]) ; 
+ 
   
   (void *) lkmd_release(&module_list) ;  
  

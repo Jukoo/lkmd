@@ -40,8 +40,9 @@
     warn(__mesg ,  ##__VA_ARGS__) ; \
     })
 
-#define  __check_nonull(x) if  (x == _Nullable)  \
-                                   errx(~0 , "Abort") ; 
+#define  __check_nonull(x) if  (x == _Nullable)  errx(~0 , "Abort") ; 
+#define  __overflow_adjust(x,y) if (x > y){ warn("OverFlow Adjusting !"); x = y ;} 
+
 
 #ifndef  __gnu_linux__ 
 #error "Reserved for GNU/Linux"  
@@ -61,6 +62,12 @@ enum {
   LKMD_LINUX_RAW_MODULE ,
   LKMD_LINUX_MATCH_LIVE_MODULE
 };
+
+
+enum { 
+  LKMD_LIVE_ONLY , 
+  LKMD_RAW_ONLY 
+}; 
 
 //! lkmd internal error code  
 enum { 
@@ -98,7 +105,9 @@ struct __mod_t {
   modsize_t  size ;
   uchar_t n_usedby ; 
   char    m_usedby[MAX_LOADABLE_MDLS <<  1 ] ; 
-} ; 
+} ;
+typedef  void (*lkmd_cb_getter) (const  struct __lkmd_t  *  , int s,  char dp[][s] ) ;  
+
 
 /** @fn  void *lkmd_syspath_open  (const char *  , struct __lkmd_t* ) ; 
  *  @brief read  proc module file (LKMD_LINUX_PROCMOD)  to get  loaded  module name
@@ -130,10 +139,21 @@ static  void *  lkmd_extract( const char * __inline_buffer  ,  struct __mod_t * 
  *  @param const struct __lkmd_t *  
  *  @return void 
  */ 
-void   lkmd_get_all_modules (const  struct __lkmd_t * _lkmd) ; 
+void   lkmd_get_raw_modules (const  struct __lkmd_t * _lkmd ,  int size ,  char __dumper [][size]) ; 
 
+/** @fn lkmd_list_live_modules (const struct  __lkmd_t *) 
+ *  @brief list  only live modules 
+ *
+ *  @param const struct __lkmd_t  *  
+ *  @return void 
+ */ 
+//void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd ) ; 
+void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char __dumper[][m_size] ) ;
 
-void  lkmd_get(const struct  __lkmd_t *  _lkmd   , int type ) ; 
+void  lkmd_get_from_cb(const struct  __lkmd_t  * _lkmd , int size ,  char dp[][size] , lkmd_cb_getter );   
+
+void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char [][size]) ; 
+
 /** @fn lkmd_count_loaded_modules  (const struct __lkmd_t * ) 
  *  @brief count all modules available 
  *  
@@ -145,14 +165,6 @@ int  lkmd_count_loaded_modules (const struct  __lkmd_t * __restrict__ __lkmd ) ;
 
 int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ; 
 
-/** @fn lkmd_list_live_modules (const struct  __lkmd_t *) 
- *  @brief list  only live modules 
- *
- *  @param const struct __lkmd_t  *  
- *  @return void 
- */ 
-//void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd ) ; 
-void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char __dumper[][m_size] ) ;
 
 /** @fn lkmd_release ( struct __lkmd_t *)
  *  @brief clean allocated  mod_t a.k.a  struct  __mod_t 
@@ -162,8 +174,7 @@ void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_si
  */ 
 void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
 
-
-
+//!show dumper on stdout ,  
 void lkmd_list_dumper_contains ( const  unsigned char * size ,  const char __dumper[][*size] ) ; 
 
 #endif /** _lkmd*/ 
