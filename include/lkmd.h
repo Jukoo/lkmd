@@ -11,7 +11,9 @@
 #define   _Nullable  _nullable 
 
 #define  __nrtrn    __attribute__((noreturn)) 
- 
+
+/**  debug print */ 
+#define  dbgprt  printf("<< dbprt  mark @ %s : __line__ number  %i\n", __FILE__ , __LINE__) ; 
 /**
  * Give default value when MAX_LOADABLE_MDLS is not set 
  * compile time flags  
@@ -99,6 +101,10 @@ struct  __lkmd_t  {
 typedef  unsigned long int   modsize_t  ; 
 typedef  unsigned char       uchar_t ; 
 
+
+/** 
+ *  representation of  live modules in /proc/modules 
+ */ 
 typedef  struct __mod_t  mod_t  ; //! live  modules  lkmd_live_t   
 struct __mod_t { 
   char name[MAX_LOADABLE_MDLS >> 3]  ; 
@@ -111,7 +117,7 @@ typedef  void (*lkmd_cb_getter) (const  struct __lkmd_t  *  , int s,  char dp[][
 
 typedef  struct  __mod_request mrq_t  ; 
 struct  __mod_request { 
-  char  dump_register[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ;  
+  char  dump_register[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ; 
   int   size  ;  
 } ; 
 
@@ -146,21 +152,16 @@ static  void *  lkmd_extract( const char * __inline_buffer  ,  struct __mod_t * 
  *  @param const struct __lkmd_t *  
  *  @return void 
  */ 
-void   lkmd_get_raw_modules (const  struct __lkmd_t * _lkmd ,  int size ,  char __dumper [][size]) ; 
+void   lkmd_get_raw_modules (const  struct __lkmd_t * _lkmd ,  int size ,  char __dumper [][MAX_LOADABLE_MDLS]) ; 
 
-/** @fn lkmd_list_live_modules (const struct  __lkmd_t *) 
- *  @brief list  only live modules 
- *
- *  @param const struct __lkmd_t  *  
- *  @return void 
- */ 
-//void lkmd_list_live_modules(const struct __lkmd_t * __restrict__  lkmd ) ; 
+struct __mod_request *lkmd_get_raw_modules_mrq(const struct  __lkmd_t * _lkmd ,  int requested_size , struct __mod_request * ) ;  
+
 void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char  (*__dumper)[MAX_LOADABLE_MDLS] ) ;
-
 //char (*(lkmd_get_live_modules_wr) (const struct __lkmd_t* __restrict__ lkmd , int __request_size ))[0xff] ; 
 struct __mod_request *lkmd_get_live_modules_mrq (const struct __lkmd_t* __restrict__ lkmd , int __request_size ,   struct __mod_request *  ) ;  
 
 void  lkmd_get_from_cb(const struct  __lkmd_t  * _lkmd , int size ,  char (*dp)[size] , lkmd_cb_getter );   
+
 
 void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[size]) ; 
 
@@ -172,7 +173,6 @@ void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[siz
  */ 
 
 int  lkmd_count_loaded_modules (const struct  __lkmd_t * __restrict__ __lkmd ) ;
-
 int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ; 
 
 

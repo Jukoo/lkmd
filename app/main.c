@@ -97,7 +97,6 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
    
 }
 
-void lkmd_get_live_module (); 
 
 
 int
@@ -115,8 +114,10 @@ main (int __ac  , char ** __av)
  
  
   mrq_t  request ; 
- 
-  lkmd_get_live_modules(&module_list ,  flags.lines,  request.dump_register) ; 
+
+  //lkmd_get_raw_modules_mrq( &module_list  , flags.lines  , &request ) ; 
+  //lkmd_get_live_modules(&module_list ,  flags.lines,  request.dump_register) ; 
+  lkmd_get_live_modules_mrq(&module_list , flags.lines ,&request) ; 
 
   lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 
   

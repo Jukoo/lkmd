@@ -155,7 +155,7 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
   return   lkmd ; 
 }
 
-void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char dumper[][m_size] )  
+void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char  (*dumper)[MAX_LOADABLE_MDLS] )  
 {
   /**  NOTE: depending  on parameter 
    *   -> load loaded module  or load all module from LKMD_LINUX_SYSMOD **/
@@ -176,6 +176,21 @@ void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char 
   
 }
 
+
+struct __mod_request * lkmd_get_raw_modules_mrq (  const struct  __lkmd_t * lkmd  , int requested_size , struct  __mod_request * mrq )  { 
+  __check_nonull(lkmd); 
+
+  uint index = 0 ; 
+ 
+  while  ( index < requested_size ) 
+  { 
+     memcpy( (mrq->dump_register+index) ,  (raw_kmod+index) , strlen(raw_kmod[index])+1) ; 
+     index++ ; 
+  }
+
+  return mrq; 
+}
+
 void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , char  (*dumper)[MAX_LOADABLE_MDLS])     
 {
   __check_nonull(lkmd->modules);
@@ -185,7 +200,8 @@ void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , cha
   while ( index < m_size ) 
   {
     
-    memcpy( (dumper+index),  (lkmd->modules+index)->name , MAX_LOADABLE_MDLS );
+    char *module_names =  (lkmd->modules+index)->name ; 
+    memcpy( (dumper+index),  module_names, strlen(module_names)) ;  
     index++ ;  
   } 
 
