@@ -4,6 +4,7 @@
  *  
  */
 
+#include <endian.h>
 #include <stdlib.h> 
 #include <unistd.h>
 #include <sys/types.h>
@@ -224,15 +225,15 @@ struct __mod_request  * lkmd_get_live_modules_mrq(const struct __lkmd_t * lmkd  
 }
 
 
-void  lkmd_get_from_cb (const struct __lkmd_t  * lkmd , int  size  , char dump_register[][size] ,  lkmd_cb_getter  lkmd_get_cb )  
+void  lkmd_get_from_cb (const struct __lkmd_t  * lkmd , int  size  , char  (*dp)[MAX_LOADABLE_MDLS],  lkmd_cb_getter  lkmd_get_cb )  
 {
   __check_nonull(lkmd) ; 
    
-  lkmd_get_cb(lkmd , size ,  dump_register) ; 
+  lkmd_get_cb(lkmd , size ,  dp) ; 
 }
 
-
-void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char dp[][size] )   
+/* 
+void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char (*dp)[MAX_LOADABLE_MDLS] )   
 {
 
   switch(type) 
@@ -241,7 +242,7 @@ void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char dp[
       lkmd_get_raw_modules(lkmd ,  size , dp) ;  
       break ; 
     case LKMD_LIVE_ONLY  : 
-      //lkmd_get_live_modules(lkmd, size , dp) ; 
+      lkmd_get_live_modules(lkmd, size , dp) ; 
       break ; 
     default : 
       //! thow error instead  ; 
@@ -249,6 +250,25 @@ void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char dp[
       
   }
   
+}*/ 
+
+char *lkmd_get (const struct __lkmd_t * lkmd  , int type , int size , char (*dp)[MAX_LOADABLE_MDLS]) { 
+  
+  switch(type) 
+  {
+    case LKMD_RAW_ONLY : 
+      lkmd_get_raw_modules(lkmd ,  size , dp) ;  
+      break ; 
+    case LKMD_LIVE_ONLY  : 
+      lkmd_get_live_modules(lkmd, size , dp) ; 
+      break ; 
+    default : 
+      //! thow error instead  ; 
+      break ;   
+      
+  }
+
+  return   (char *) dp ; 
 }
 
 int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)  
@@ -284,6 +304,47 @@ void lkmd_list_dumper_contains(const unsigned char size, const char (*dumper)[MA
     index++ ; 
   }
 
+}
+
+
+void lkmd_enumerate_spc(char *restrict scp_lkmd ,  int limite) 
+{
+  __check_nonull(scp_lkmd); 
+ 
+  uint j_index = 0 ;
+  uint z_index = 0 ;
+
+  char *scp_transaction  = malloc(MAX_LOADABLE_MDLS) ; 
+
+  while (  (scp_lkmd+z_index)[0] != 0 ) 
+  {
+    if(limite ==0)
+    {
+      lkmd_log("%s", (scp_lkmd+z_index) )  ; 
+      z_index+=MAX_LOADABLE_MDLS ; 
+      continue ; 
+    }
+  
+    
+    if (j_index <  limite  ) 
+    { 
+      //modify change  
+      
+      lkmd_log("%s", (scp_lkmd+z_index) )  ;
+      
+      char  *tmp =  (scp_lkmd+z_index) ;
+      memset((scp_transaction+j_index) , 0  , MAX_LOADABLE_MDLS) ; 
+      memcpy((scp_transaction+j_index)  ,tmp , strlen(tmp) ); 
+      
+      z_index+=MAX_LOADABLE_MDLS ; 
+      j_index++ ; 
+    }else { 
+      
+      memset (  (scp_lkmd+z_index) ,  0 , MAX_LOADABLE_MDLS)  ; 
+      memcpy(scp_lkmd , scp_transaction , MAX_LOADABLE_MDLS ) ;  
+      break ; 
+    } 
+  }
 }
 
 

@@ -117,9 +117,19 @@ main (int __ac  , char ** __av)
 
   //lkmd_get_raw_modules_mrq( &module_list  , flags.lines  , &request ) ; 
   //lkmd_get_live_modules(&module_list ,  flags.lines,  request.dump_register) ; 
-  lkmd_get_live_modules_mrq(&module_list , flags.lines ,&request) ; 
+  //lkmd_get_live_modules_mrq(&module_list , flags.lines ,&request) ; 
 
-  lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 
+  //lkmd_get_from_cb(&module_list ,  flags.lines , request.dump_register , lkmd_get_live_modules) ;  
+ 
+  char *a = lkmd_get(&module_list , LKMD_RAW_ONLY ,flags.lines ,  request.dump_register) ;  
+
+
+  lkmd_enumerate_spc(a , 2); 
+  dbgprt ; 
+  lkmd_enumerate_spc(a,0); 
+
+
+  //lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 
   
 
   
