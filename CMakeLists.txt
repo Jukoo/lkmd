@@ -5,6 +5,11 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_library(${PROJECT_NAME}  SHARED lkmd.c) #-fPIC
 
+if(DBGPRT) 
+  message(STATUS "Enable debug print macro") 
+  add_definitions(-D__dbgprt)  
+endif() 
+
 add_subdirectory(app) 
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)  #-I  

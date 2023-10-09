@@ -7,24 +7,32 @@
 #if !defined  (_lkmd) 
 #define        _lkmd
 
-#define   _nullable  (void *) (0U << 1)  
-#define   _Nullable  _nullable 
+typedef  void *  __void  ;  
+#define   _nullable    (( __void  ) (0U << 1)) 
+#define   _Nullable  _nullable  
+#define   _void_0h   _nullable 
+
 
 #define  __nrtrn    __attribute__((noreturn)) 
 
 /**  debug print */ 
+#ifdef   __dbgprt  
 #define  dbgprt  printf("<< dbprt  mark @ \x1b[1;36m %s \x1b[0m : __line__ number  \x1b[1;32m %i \x1b[0m \n", __FILE__ , __LINE__) ; 
+#else 
+#define  dbgprt  
+#endif //__dbgprt   
+
 /**
  * Give default value when MAX_LOADABLE_MDLS is not set 
  * compile time flags  
  */ 
 #ifndef  MAX_LOADABLE_MDLS
-#define  MAX_LOADABLE_MDLS ( sizeof(void*) << 6 )  
+#define  MAX_LOADABLE_MDLS ( sizeof(__void)  << 6 )  
 #endif   
 
 #define LKMD_TAG   "LKMD"
 
-#define HIDDIRENT  0x2e
+#define HIDDIRENT  (0x2e&0xff)  
 
 
 #define  lkmd_log(__mesg , ...) ({\
@@ -54,6 +62,8 @@
 enum { 
   LKMD_LINUX_SYSMOD,
 #define  LKMD_LINUX_SYSMOD  d_gnu_linux_sys_paths_modules 
+  LKMD_LINUX_SYSMOD_RAWS, 
+#define LKMD_LINUX_SYSMOD_RAWS LKMD_LINUX_SYSMOD 
   LKMD_LINUX_PROCMOD 
 #define  LKMD_LINUX_PROCMOD f_gnu_linux_sys_proc_modules
 } ; 
@@ -85,6 +95,8 @@ enum {
   //0x000000  - unused   
 } ; 
 
+
+/**  raws module based on /sys/module  or  LKMD_LINUX_SYSMOD | LKMD_LINUX_SYSMOD_RAWS */
 typedef struct  __lkmd_t  lkmd_t ; //raw modules  lkmd_raw_t  
 struct  __lkmd_t  {
   char root_path[0x14] ; 
