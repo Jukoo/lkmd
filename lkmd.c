@@ -340,7 +340,8 @@ void lkmd_enumerate_spc(char *restrict scp_lkmd ,  int limite)
       j_index++ ; 
     }else { 
       
-      memset (  (scp_lkmd+z_index) ,  0 , MAX_LOADABLE_MDLS)  ; 
+      memset (  (scp_lkmd+z_index) ,  0 , MAX_LOADABLE_MDLS)  ;
+
       memcpy(scp_lkmd , scp_transaction , MAX_LOADABLE_MDLS ) ;  
       break ; 
     } 

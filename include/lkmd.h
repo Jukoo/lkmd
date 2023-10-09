@@ -13,7 +13,7 @@
 #define  __nrtrn    __attribute__((noreturn)) 
 
 /**  debug print */ 
-#define  dbgprt  printf("<< dbprt  mark @ %s : __line__ number  %i\n", __FILE__ , __LINE__) ; 
+#define  dbgprt  printf("<< dbprt  mark @ \x1b[1;36m %s \x1b[0m : __line__ number  \x1b[1;32m %i \x1b[0m \n", __FILE__ , __LINE__) ; 
 /**
  * Give default value when MAX_LOADABLE_MDLS is not set 
  * compile time flags  
@@ -46,9 +46,7 @@
 #define  __overflow_adjust(x,y) if (x > y){ warn("OverFlow Adjusting !"); x = y ;} 
 
 
-#ifndef  __gnu_linux__ 
-#error "Reserved for GNU/Linux"  
-#endif  //! __gnu_linux__
+
 
 #define d_gnu_linux_sys_paths_modules  "/sys/module/" 
 #define f_gnu_linux_sys_proc_modules  "/proc/modules" 
