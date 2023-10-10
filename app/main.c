@@ -43,8 +43,14 @@ enum {
 
 typedef  struct  __flargs  flarg ; 
 struct __flargs { 
-  int lines;
-  char finds[MAXBUFF] ;  
+
+  char _finds[MAXBUFF] ;          //NOT IMPLTED  
+  char _interval[MAXBUFF >> 4] ;   //NOT IMPLTED  
+
+  int  _lines;
+  int  _goto;                      //NOT IMPLTED  
+  int  _human_readable ;           //NOT IMPLTED  
+  int  _kmesg ;                    //NOT IMPLTED  
  
 } ; 
 
@@ -81,11 +87,11 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
           exit(0) ; 
           break ;
         case  'n' : 
-          flag_arguments->lines = strtol(optarg , (void *)0 ,  10) ; 
+          flag_arguments->_lines = strtol(optarg , (void *)0 ,  10) ; 
           if (errno != 0)
           {
             warn("required a numeric constant") ; 
-            flag_arguments->lines = BAD_NUMCOVER ; 
+            flag_arguments->_lines = BAD_NUMCOVER ; 
           }
           break;
         default : 
@@ -119,13 +125,13 @@ main (int __ac  , char ** __av)
   //lkmd_get_live_modules_mrq(&module_list , flags.lines ,&request) ; 
 
   //lkmd_get_from_cb(&module_list ,  flags.lines , request.dump_register , lkmd_get_live_modules) ;  
- 
-  char *a = lkmd_get(kmod , LKMD_RAW_ONLY ,flags.lines ,  request.dump_register) ;  
 
+  lkmd_show_lkmod(kmod,  flags._lines) ; 
+  //char *a = lkmd_get(kmod , LKMD_RAW_ONLY ,flags.lines ,  request.dump_register) ;  
 
-  lkmd_splice(a , -2 );
-  dbgprt ;
-  lkmd_splice_show(a); 
+  //lkmd_splice(a , -2 );
+  //dbgprt ;
+  //lkmd_splice_show(a); 
 
 
   //lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 

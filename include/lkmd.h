@@ -20,7 +20,12 @@ typedef  void *  __void  ;
 #define  dbgprt  printf("<< dbprt  mark @ \x1b[1;36m %s \x1b[0m : __line__ number  \x1b[1;32m %i \x1b[0m \n", __FILE__ , __LINE__) ; 
 #else 
 #define  dbgprt  
-#endif //__dbgprt   
+#endif //__dbgprt  
+
+#define  LKMD_BANNER \
+  printf("\t%-15s\t\t\t%-15s\t%-15s\n" , "Modules" , "Size"  , "Used By") ;\
+  puts("------------------------------------------------------------------");
+
 
 /**
  * Give default value when MAX_LOADABLE_MDLS is not set 
@@ -32,7 +37,10 @@ typedef  void *  __void  ;
 
 #define LKMD_TAG   "LKMD"
 
-#define HIDDIRENT  (0x2e&0xff)
+#define HIDDIRENT  (0x2e&0xff) 
+
+
+#ifdef SHOW_LKMD_TAG  
 
 #define  lkmd_log(__mesg , ...) ({\
     char smesg[MAX_LOADABLE_MDLS]  ={ 0 } ; \
@@ -40,8 +48,30 @@ typedef  void *  __void  ;
     fprintf(stdout , "[%s]:: %s\n" ,LKMD_TAG , smesg);\
     })
 
+#define  lkmd_logi(index , __mesg  , ... ) ({\
+    char smesg[MAX_LOADABLE_MDLS] = {0} ; \
+    sprintf(smesg , __mesg ,##__VA_ARGS__);\
+    fprintf(stdout , "[%s]:%i: %-15s\n" ,LKMD_TAG , index , smesg );\
+    })
+
+
+#else 
+
+#define  lkmd_log(__mesg , ...) ({\
+    fprintf(stdout , __mesg   , ##__VA_ARGS__);\
+    })
+
+#define  lkmd_logi(__index , __mesg  , ... ) ({\
+    char smesg[MAX_LOADABLE_MDLS] =  {0} ;\
+    sprintf(smesg ,  ":%i: %-15s\n", __index , __mesg);\
+    fprintf(stdout , smesg , ##__VA_ARGS__);\
+    })
+
+
+#endif //! SHOW_LKMD_TAG  
+
 #define  lkmd_errx(__exit_code, __mesg , ...) ( {\
-    if(__exit_code == 0) warn("%s@%i : exit_code Reserved for ESUCESS\n", __FILE__ ,__LINE__); \
+    if(__exit_code == 0) warn("%s@%i : exit_code Reserved for EXIT_SUCCESS\n", __FILE__ ,__LINE__); \
     errx(__exit_code , __mesg , ##__VA_ARGS__) ; \
     })
 
@@ -188,6 +218,7 @@ char  * lkmd_get (const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[
 int  lkmd_count_loaded_modules (const struct  __lkmd_raw_t * __restrict__ __lkmd ) ;
 int  lkmd_count_live_modules ( const struct __lkmd_raw_t * __restrict__ __lkmd ) ; 
 
+void lkmd_show_lkmod(const struct __lkmd_t * __restrict__ __kmod  ,  int nrows )  ; 
 
 /** @fn lkmd_release ( struct __lkmd_raw_t *)
  *  @brief clean allocated  lmkd_live_t a.k.a  struct  __lkmd_live_t 
@@ -195,7 +226,7 @@ int  lkmd_count_live_modules ( const struct __lkmd_raw_t * __restrict__ __lkmd )
  *  @param struct  __lkmd_raw_t * 
  *  @return void * should be null  for Success 
  */ 
-void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
+void * lkmd_release(struct __lkmd_t * __restrict__ __lkmdlive); 
 
 //!show dumper on stdout ,  
 void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char (*dumper)[size]) ; 

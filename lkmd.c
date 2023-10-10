@@ -304,6 +304,31 @@ void  * lkmd_release( struct __lkmd_t *  restrict  kmod  )
    return  lkmd->modules ; // ! it's should be nil  
 }
 
+void lkmd_show_lkmod( const struct __lkmd_t   * kmodlive , int nrows ) 
+{
+  __check_nonull(kmodlive);
+
+  struct __lkmd_raw_t *  lmkd = (struct __lkmd_raw_t *)  kmodlive ; 
+  
+
+  LKMD_BANNER ; 
+
+  int rows_index = 0 ; 
+  if(nrows   <= 0 ) 
+    nrows =  lmkd->total_of_live_module ;   
+
+  while  ( rows_index  < nrows )  
+  {
+    //! display 
+    lkmd_logi(rows_index+1 , "%-15s\t\t%-15li\t%i %-15s", (lmkd->modules+rows_index)->name , (lmkd->modules+rows_index)->size , (lmkd->modules+rows_index)->n_usedby ,  (lmkd->modules+rows_index)->m_usedby); 
+    rows_index++ ; 
+  }
+  
+  
+}
+
+
+
 void lkmd_list_dumper_contains(const unsigned char size, const char (*dumper)[MAX_LOADABLE_MDLS]) 
 {
   unsigned char  index = 0 ; 
@@ -378,13 +403,16 @@ void lkmd_splice_show ( const  char *  scp_lkmd  )
 /**
  * TODO :  
  * []  show live module  like  lsmod   
- * NOTE : 
- * lmkd -h < human readable> 
- * lkmd -s search  module  
- * lkmd -I info module  [ if no module is specified ] that check the current workdir 
- * lkmd -v version of lkmd 
+ * NOTE :
+ * lkmd -n --lines   x  
+ * lmkd -g --goto    x 
+ * lmkd -i --interval  x:y   [ even if  the  y number  is greater than x   ]
+ * lmkd -h --human-readable  < human readable> 
+ * lkmd -f --find  module  
+ * lkmd -I --info info module  [ if no module is specified ] that check the current workdir ] 
+ * lkmd -v --version version of lkmd 
  * lkmd -h help version 
- * lkmd -km  --kernel-mesg  or -dmesg 
+ * lkmd -m --kmesg --kernel-mesg  or -dmesg 
  *
  */ 
 

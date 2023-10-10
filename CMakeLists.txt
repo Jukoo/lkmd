@@ -5,6 +5,11 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_library(${PROJECT_NAME}  SHARED lkmd.c) #-fPIC
 
+if(INCLTAG) 
+  message(STATUS  "Show Tag ON") 
+  add_definitions(-DSHOW_LKMD_TAG) 
+endif()
+
 if(DBGPRT) 
   message(STATUS "Enable debug print macro") 
   add_definitions(-D__dbgprt)  
@@ -18,4 +23,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)  #-I
 set_target_properties(${PROJECT_NAME}  PROPERTIES  VERSION  ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME}  PROPERTIES  SOVERSION ${PROJECT_VERSION_MINOR})
 set_target_properties(${PROJECT_NAME}  PROPERTIES  PUBLIC_HEADER include/lkmd.h) 
+
+
 
