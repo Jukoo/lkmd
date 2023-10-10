@@ -4,8 +4,8 @@
  *  
  */
 
-#include <endian.h>
 #include <stdlib.h> 
+#include <strings.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h> 
@@ -28,7 +28,7 @@ static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ;
 
 static char resquest[0xff][0xff] ={0} ;  
 
-static struct  __mod_t *lkmd_load_live_sysprocmod (void) 
+static struct  __lkmd_live_t *lkmd_load_live_sysprocmod (void) 
 {
     
     int  pmod_fd  = open ( LKMD_LINUX_PROCMOD , O_RDONLY ) ; 
@@ -42,7 +42,7 @@ static struct  __mod_t *lkmd_load_live_sysprocmod (void)
       lkmd_errx(LKMD_DUP_STREAM_ERR , "stream duplication error") ; 
     }
    
-    struct __mod_t  * modules_collection = ( struct __mod_t *) malloc(sizeof(*modules_collection)  * MAX_LOADABLE_MDLS) ;  
+    struct __lkmd_live_t  * modules_collection = ( struct __lkmd_live_t *) malloc(sizeof(*modules_collection)  * MAX_LOADABLE_MDLS) ;  
     
     char inline_buffer[MAX_LOADABLE_MDLS << 3 ]  =   {0} ;
     
@@ -60,12 +60,13 @@ static struct  __mod_t *lkmd_load_live_sysprocmod (void)
 } 
 
 //! just parse  inline string  
-static void * lkmd_extract(const char * inbuff  , struct  __mod_t * modt) 
+static void * lkmd_extract(const char * inbuff  , struct  __lkmd_live_t * modt) 
 {
 
   char *local_buff = (char *)inbuff ; 
+  char sep[2]= { 0x20  , 0 } ;  
   
-  char *token  = strtok(local_buff ,   " ")  ; 
+  char *token  = strtok(local_buff ,  sep)  ; 
 
   uchar_t  stage = 0; 
   while ( token != _nullable  ) 
@@ -96,7 +97,7 @@ static void * lkmd_extract(const char * inbuff  , struct  __mod_t * modt)
 }
 
 
-struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * lkmd )    
+struct __lkmd_raw_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_raw_t * lkmd )    
 {
  
   char sysmpath[MAX_LOADABLE_MDLS]  = LKMD_LINUX_SYSMOD ; 
@@ -120,7 +121,7 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
     return   _nullable ; 
   } 
 
- 
+  explicit_bzero(lkmd->root_path , 0x14) ;  
   memcpy(lkmd->root_path ,  sysmpath  , strlen(sysmpath)) ; 
   
   struct dirent  * dirp = _nullable ; 
@@ -137,7 +138,8 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
        { 
          /** Check live  modules*/
          if(strcmp((lkmd->modules+match)->name  , dirp->d_name) ==  0) {
-           //lkmd_log("%s" ,  dirp->d_name) ; 
+           //lkmd_log("%s" ,  dirp->d_name) ;
+           //+ just  to make sure current loaded modules are  in present in raw modules 
            lkmd->total_of_live_module++  ; 
          }
          match++ ; 
@@ -156,17 +158,17 @@ struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct _
   return   lkmd ; 
 }
 
-void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char  (*dumper)[MAX_LOADABLE_MDLS] )  
+void lkmd_get_raw_modules( const struct __lkmd_raw_t *  lkmd ,  int m_size   , char  (*dumper)[MAX_LOADABLE_MDLS] )  
 {
   /**  NOTE: depending  on parameter 
    *   -> load loaded module  or load all module from LKMD_LINUX_SYSMOD **/
  
-  __check_nonull(lkmd) ; 
-  __overflow_adjust(m_size , lkmd->total_of_module) ;  
+  __check_nonull(lkmd) ;
+  __overflow_adjust(m_size ,  MAX_LOADABLE_MDLS) ; 
   uchar_t index =0  ;
   
 
-  //! That show all module from  LKMD_LINUX_SYSMOD 
+  //! That show all module from  LKMD_LINUX_SYSMOD  |  LKMD_LINUX_PROCMOD_RAWS  
   while  ( index  <  m_size  )  
   {   
     
@@ -178,8 +180,9 @@ void lkmd_get_raw_modules( const struct __lkmd_t *  lkmd ,  int m_size   , char 
 }
 
 
-struct __mod_request * lkmd_get_raw_modules_mrq (  const struct  __lkmd_t * lkmd  , int requested_size , struct  __mod_request * mrq )  { 
+struct __mod_request * lkmd_get_raw_modules_mrq (  const struct  __lkmd_raw_t * lkmd  , int requested_size , struct  __mod_request * mrq )  { 
   __check_nonull(lkmd); 
+  __overflow_adjust(requested_size ,  MAX_LOADABLE_MDLS) ; 
 
   uint index = 0 ; 
  
@@ -192,9 +195,10 @@ struct __mod_request * lkmd_get_raw_modules_mrq (  const struct  __lkmd_t * lkmd
   return mrq; 
 }
 
-void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , char  (*dumper)[MAX_LOADABLE_MDLS])     
+void  lkmd_get_live_modules( const struct __lkmd_raw_t  *  lkmd ,   int m_size , char  (*dumper)[MAX_LOADABLE_MDLS])     
 {
   __check_nonull(lkmd->modules);
+  __overflow_adjust(m_size ,  MAX_LOADABLE_MDLS) ; 
 
   int  index  = 0 ;  
   
@@ -204,55 +208,40 @@ void  lkmd_get_live_modules( const struct __lkmd_t  *  lkmd ,   int m_size , cha
     char *module_names =  (lkmd->modules+index)->name ; 
     memcpy( (dumper+index),  module_names, strlen(module_names)) ;  
     index++ ;  
-  } 
+  }
+
+
 
 }
 
 
-struct __mod_request  * lkmd_get_live_modules_mrq(const struct __lkmd_t * lmkd  , int request_size ,  struct __mod_request  * mrq)   
+struct __mod_request  * lkmd_get_live_modules_mrq(const struct __lkmd_raw_t * lmkd  , int requested_size ,  struct __mod_request  * mrq)   
 {
   __check_nonull(lmkd->modules);
-  
+  __overflow_adjust(requested_size ,  MAX_LOADABLE_MDLS) ; 
+
   int index = 0 ; 
-  while ( index <  request_size) 
+  while ( index <  requested_size) 
   {
     memcpy((mrq->dump_register+index), (lmkd->modules+index)->name, 0xff); 
     index++ ; 
   }
 
-  memset ((mrq->dump_register+index+1) , 0 ,   0xff-request_size) ; 
+  memset ((mrq->dump_register+index+1) , 0 ,   0xff-requested_size) ; 
   return mrq ;
 }
 
 
-void  lkmd_get_from_cb (const struct __lkmd_t  * lkmd , int  size  , char  (*dp)[MAX_LOADABLE_MDLS],  lkmd_cb_getter  lkmd_get_cb )  
+void  lkmd_get_from_cb (const struct __lkmd_raw_t  * lkmd , int  size  , char  (*dp)[MAX_LOADABLE_MDLS],  lkmd_cb_getter  lkmd_get_cb )  
 {
   __check_nonull(lkmd) ; 
    
   lkmd_get_cb(lkmd , size ,  dp) ; 
 }
 
-/* 
-void  lkmd_get ( const struct  __lkmd_t * lkmd , int type  , int size , char (*dp)[MAX_LOADABLE_MDLS] )   
-{
 
-  switch(type) 
-  {
-    case LKMD_RAW_ONLY : 
-      lkmd_get_raw_modules(lkmd ,  size , dp) ;  
-      break ; 
-    case LKMD_LIVE_ONLY  : 
-      lkmd_get_live_modules(lkmd, size , dp) ; 
-      break ; 
-    default : 
-      //! thow error instead  ; 
-      return ; 
-      
-  }
-  
-}*/ 
 
-char *lkmd_get (const struct __lkmd_t * lkmd  , int type , int size , char (*dp)[MAX_LOADABLE_MDLS]) { 
+char *lkmd_get (const struct __lkmd_raw_t * lkmd  , int type , int size , char (*dp)[MAX_LOADABLE_MDLS]) { 
   
   switch(type) 
   {
@@ -271,21 +260,21 @@ char *lkmd_get (const struct __lkmd_t * lkmd  , int type , int size , char (*dp)
   return   (char *) dp ; 
 }
 
-int  lkmd_count_loaded_modules (  const struct __lkmd_t *  lkmd)  
+int  lkmd_count_loaded_modules (  const struct __lkmd_raw_t *  lkmd)  
 {
    __check_nonull(lkmd) ; 
   
    return  lkmd->total_of_module ; 
 }
 
-int lkmd_count_live_modules(const struct __lkmd_t *restrict lkmd)
+int lkmd_count_live_modules(const struct __lkmd_raw_t *restrict lkmd)
 {
   __check_nonull(lkmd);
   __check_nonull(lkmd->modules); 
   return lkmd->total_of_live_module ; 
 }
 
-void  * lkmd_release( struct __lkmd_t *  restrict  lkmd )  
+void  * lkmd_release( struct __lkmd_raw_t *  restrict  lkmd )  
 {
    __check_nonull(lkmd); 
    __check_nonull(lkmd->modules) ; 
@@ -307,51 +296,70 @@ void lkmd_list_dumper_contains(const unsigned char size, const char (*dumper)[MA
 }
 
 
-void lkmd_enumerate_spc(char *restrict scp_lkmd ,  int limite) 
+void lkmd_splice(char *restrict scp_lkmd ,  int   blimit) 
 {
   __check_nonull(scp_lkmd); 
  
   uint j_index = 0 ;
   uint z_index = 0 ;
 
-  char *scp_transaction  = malloc(MAX_LOADABLE_MDLS) ; 
-
   while (  (scp_lkmd+z_index)[0] != 0 ) 
   {
-    if(limite ==0)
+    if(blimit  ==0)
     {
-      lkmd_log("%s", (scp_lkmd+z_index) )  ; 
+      lkmd_log("%s", (scp_lkmd+z_index) )  ;
+      
+      //!like jump  , each index  is set to MAX_LOADABLE_MDLS  bytes 
+      //[0] ="data<0:MAX_LOADABLE_MDLS>...[1] ="data<1:MAX_LOADABLE_MDLS>..." 
+      //z_index +MAX_LOADABLE_MDLS> ....  ,  
       z_index+=MAX_LOADABLE_MDLS ; 
       continue ; 
     }
   
-    
-    if (j_index <  limite  ) 
+    int  abs_limit =  abs((int)blimit)  ; 
+    if (j_index <  abs_limit  ) 
     { 
-      //modify change  
-      
-      lkmd_log("%s", (scp_lkmd+z_index) )  ;
-      
-      char  *tmp =  (scp_lkmd+z_index) ;
-      memset((scp_transaction+j_index) , 0  , MAX_LOADABLE_MDLS) ; 
-      memcpy((scp_transaction+j_index)  ,tmp , strlen(tmp) ); 
-      
       z_index+=MAX_LOADABLE_MDLS ; 
       j_index++ ; 
-    }else { 
-      
-      memset (  (scp_lkmd+z_index) ,  0 , MAX_LOADABLE_MDLS)  ;
+    }else {        
+       /** 
+        * !FIXME : TODO  : 
+        *  -------------- 
+        *  like  splice function in other programming  language 
+        * 
+       if (blimit <= ~0) 
+       {  
+         char *scp_transaction = (char *)(scp_lkmd+z_index) ;  
+        
+         explicit_bzero(scp_lkmd,  MAX_LOADABLE_MDLS) ;  
 
-      memcpy(scp_lkmd , scp_transaction , MAX_LOADABLE_MDLS ) ;  
+         memcpy((char *)  scp_lkmd , scp_transaction  ,  MAX_LOADABLE_MDLS) ; 
+        
+       }else 
+       */ 
+
+         memset ( (scp_lkmd +  z_index) ,  0 , MAX_LOADABLE_MDLS)  ; 
+
       break ; 
     } 
   }
+
+  
 }
 
 
+void lkmd_splice_show ( const  char *  scp_lkmd  )
+{ 
+  char *scp=(char*) scp_lkmd ; 
+  lkmd_splice(scp ,0)  ; 
+}
 
-/** 
- * NOTE :  
+
+/**
+ * TODO :  
+ * []  show live module  like  lsmod   
+ * NOTE : 
+ * lmkd -h < human readable> 
  * lkmd -s search  module  
  * lkmd -I info module  [ if no module is specified ] that check the current workdir 
  * lkmd -v version of lkmd 

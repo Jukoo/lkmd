@@ -32,8 +32,7 @@ typedef  void *  __void  ;
 
 #define LKMD_TAG   "LKMD"
 
-#define HIDDIRENT  (0x2e&0xff)  
-
+#define HIDDIRENT  (0x2e&0xff)
 
 #define  lkmd_log(__mesg , ...) ({\
     char smesg[MAX_LOADABLE_MDLS]  ={ 0 } ; \
@@ -51,7 +50,7 @@ typedef  void *  __void  ;
     })
 
 #define  __check_nonull(x) if  (x == _Nullable)  errx(~0 , "Abort") ; 
-#define  __overflow_adjust(x,y) if (x > y){ warn("OverFlow Adjusting !"); x = y ;} 
+#define  __overflow_adjust(x,y) if (x > y){ warn("OverFlow Adjusting !"); x = y ;  x-=1;} 
 
 
 
@@ -97,14 +96,14 @@ enum {
 
 
 /**  raws module based on /sys/module  or  LKMD_LINUX_SYSMOD | LKMD_LINUX_SYSMOD_RAWS */
-typedef struct  __lkmd_t  lkmd_t ; //raw modules  lkmd_raw_t  
-struct  __lkmd_t  {
+typedef struct  __lkmd_raw_t  lkmd_raw_t ; //raw modules  lkmd_raw_t  
+struct  __lkmd_raw_t  {
   char root_path[0x14] ; 
   char *modules_names[MAX_LOADABLE_MDLS] ; 
   int   total_of_module;
   
   int   total_of_live_module; 
-  struct __mod_t * modules ; 
+  struct __lkmd_live_t * modules ; 
 } ; 
 
 
@@ -115,8 +114,8 @@ typedef  unsigned char       uchar_t ;
 /** 
  *  representation of  live modules in /proc/modules 
  */ 
-typedef  struct __mod_t  mod_t  ; //! live  modules  lkmd_live_t   
-struct __mod_t { 
+typedef  struct __lkmd_live_t  lmkd_live_t  ; //! live  modules  lkmd_live_t   
+struct __lkmd_live_t { 
   char name[MAX_LOADABLE_MDLS >> 3]  ; 
   modsize_t  size ;
   uchar_t n_usedby ; 
@@ -124,7 +123,7 @@ struct __mod_t {
 } ;
 
 
-typedef  void (*lkmd_cb_getter) (const  struct __lkmd_t  *  , int ,  char (*)[MAX_LOADABLE_MDLS] ) ; 
+typedef  void (*lkmd_cb_getter) (const  struct __lkmd_raw_t  *  , int ,  char (*)[MAX_LOADABLE_MDLS] ) ; 
 
 
 typedef  struct  __mod_request mrq_t  ; 
@@ -134,73 +133,76 @@ struct  __mod_request {
 } ; 
 
 
-/** @fn  void *lkmd_syspath_open  (const char *  , struct __lkmd_t* ) ; 
+typedef struct __lmkd_t  lkmd_t ; 
+
+
+
+/** @fn  void *lkmd_syspath_open  (const char *  , struct __lkmd_raw_t* ) ; 
  *  @brief read  proc module file (LKMD_LINUX_PROCMOD)  to get  loaded  module name
  *  this function is used  to  make match between current loaded module 
  *  and modules sys path directory (LKMD_LINUX_SYSMOD  
  *  @param void 
- *  @return  array of  mod_t *  struct 
+ *  @return  array of  lmkd_live_t *  struct 
  */ 
-static struct __mod_t *  lkmd_load_live_sysprocmod(void) ;
+static struct __lkmd_live_t *  lkmd_load_live_sysprocmod(void) ;
 
 /** @fn  l  
  *
  */ 
-struct __lkmd_t *  lkmd_syspath_open (const char  * __restrict__  __syspath  , struct __lkmd_t *)  ; 
+struct __lkmd_raw_t *  lkmd_syspath_open (const char  * __restrict__  __syspath  , struct __lkmd_raw_t *)  ; 
 
-/** @fn static void * lkmd_extract( const char * , struct __mod_t * )  
+/** @fn static void * lkmd_extract( const char * , struct __lkmd_live_t * )  
  *  @brief extract the need information from __buff  parameter 
- *         which is a single line  and dump it into  __mod_t structure 
+ *         which is a single line  and dump it into  __lkmd_live_t structure 
  *  @param  const char  * __inline_buffer 
- *  @param  struct __mod_t *  ( see  struct  __mod_t data structure ) 
+ *  @param  struct __lkmd_live_t *  ( see  struct  __lkmd_live_t data structure ) 
  *  @return  void *  
  *
  */ 
-static  void *  lkmd_extract( const char * __inline_buffer  ,  struct __mod_t *  ) ; 
+static  void *  lkmd_extract( const char * __inline_buffer  ,  struct __lkmd_live_t *  ) ; 
 
-/** @fn  void lkmd_list_all_module_found( const struct __lkmd_t * ) 
+/** @fn  void lkmd_list_all_module_found( const struct __lkmd_raw_t * ) 
  *  @brief list all modules found in the host even the unloaded  modules 
  *
- *  @param const struct __lkmd_t *  
+ *  @param const struct __lkmd_raw_t *  
  *  @return void 
  */ 
-void   lkmd_get_raw_modules (const  struct __lkmd_t * _lkmd ,  int size ,  char (*dp)[MAX_LOADABLE_MDLS]) ; 
+void   lkmd_get_raw_modules (const  struct __lkmd_raw_t * _lkmd ,  int size ,  char (*dp)[MAX_LOADABLE_MDLS]) ; 
+struct __mod_request *lkmd_get_raw_modules_mrq(const struct  __lkmd_raw_t * _lkmd ,  int requested_size , struct __mod_request * ) ;  
 
-struct __mod_request *lkmd_get_raw_modules_mrq(const struct  __lkmd_t * _lkmd ,  int requested_size , struct __mod_request * ) ;  
-
-void lkmd_get_live_modules(const struct __lkmd_t * __restrict__  lkmd , int m_size , char  (*__dumper)[MAX_LOADABLE_MDLS] ) ;
-//char (*(lkmd_get_live_modules_wr) (const struct __lkmd_t* __restrict__ lkmd , int __request_size ))[0xff] ; 
-struct __mod_request *lkmd_get_live_modules_mrq (const struct __lkmd_t* __restrict__ lkmd , int __request_size ,   struct __mod_request *  ) ;  
+void lkmd_get_live_modules(const struct __lkmd_raw_t * __restrict__  lkmd , int m_size , char  (*__dumper)[MAX_LOADABLE_MDLS] ) ;
+struct __mod_request *lkmd_get_live_modules_mrq (const struct __lkmd_raw_t* __restrict__ lkmd , int __request_size ,   struct __mod_request *  ) ;  
 
 
-void  lkmd_get_from_cb(const struct  __lkmd_t  * _lkmd , int size ,  char (*dp)[MAX_LOADABLE_MDLS]  , lkmd_cb_getter );   
+void  lkmd_get_from_cb(const struct  __lkmd_raw_t  * _lkmd , int size ,  char (*dp)[MAX_LOADABLE_MDLS]  , lkmd_cb_getter );   
 
-//void  lkmd_get(const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[MAX_LOADABLE_MDLS]) ; 
-char  * lkmd_get (const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[MAX_LOADABLE_MDLS]);  
+char  * lkmd_get (const struct __lkmd_raw_t *  ,  int type , int size ,  char (*dp)[MAX_LOADABLE_MDLS]);  
 
-/** @fn lkmd_count_loaded_modules  (const struct __lkmd_t * ) 
+/** @fn lkmd_count_loaded_modules  (const struct __lkmd_raw_t * ) 
  *  @brief count all modules available 
  *  
- *  @param const struct __lkmd_t * 
+ *  @param const struct __lkmd_raw_t * 
  *  @return  int  - number of all modules  even not loaded 
  */ 
 
-int  lkmd_count_loaded_modules (const struct  __lkmd_t * __restrict__ __lkmd ) ;
-int  lkmd_count_live_modules ( const struct __lkmd_t * __restrict__ __lkmd ) ; 
+int  lkmd_count_loaded_modules (const struct  __lkmd_raw_t * __restrict__ __lkmd ) ;
+int  lkmd_count_live_modules ( const struct __lkmd_raw_t * __restrict__ __lkmd ) ; 
 
 
-/** @fn lkmd_release ( struct __lkmd_t *)
- *  @brief clean allocated  mod_t a.k.a  struct  __mod_t 
+/** @fn lkmd_release ( struct __lkmd_raw_t *)
+ *  @brief clean allocated  lmkd_live_t a.k.a  struct  __lkmd_live_t 
  *
- *  @param struct  __lkmd_t * 
+ *  @param struct  __lkmd_raw_t * 
  *  @return void * should be null  for Success 
  */ 
-void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
+void * lkmd_release(struct __lkmd_raw_t * __restrict__ __lkmd); 
 
 //!show dumper on stdout ,  
-void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char __dumper[][size] ) ; 
+void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char (*dumper)[size]) ; 
 
-void lkmd_enumerate_spc(char * __restrict__   ,  int limit) ;   //spc  signle pointor char 
-                                                       
+void lkmd_splice(char * __restrict__   ,  int  blimit) ; 
+
+void lkmd_splice_show( const char  * __restrict__ ) ;  
+
 
 #endif /** _lkmd*/ 
