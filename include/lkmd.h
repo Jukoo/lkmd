@@ -90,8 +90,8 @@ enum {
   LKMD_MODULE_SIZE , 
   LKMD_MODULE_XUSED, 
   LKMD_MODULE_USEDBY , 
-  //Live      - unused 
-  //0x000000  - unused   
+  //Live      - unused  //  not supported yet 
+  //0x000000  - unused  //  not supported yet
 } ; 
 
 
@@ -149,7 +149,7 @@ static struct __lkmd_live_t *  lkmd_load_live_sysprocmod(void) ;
 /** @fn  l  
  *
  */ 
-struct __lkmd_raw_t *  lkmd_syspath_open (const char  * __restrict__  __syspath  , struct __lkmd_raw_t *)  ; 
+struct __lkmd_t *  lkmd_syspath_open (const char  * __restrict__  __syspath  , struct __lkmd_t *)  ; 
 
 /** @fn static void * lkmd_extract( const char * , struct __lkmd_live_t * )  
  *  @brief extract the need information from __buff  parameter 
@@ -176,7 +176,7 @@ struct __mod_request *lkmd_get_live_modules_mrq (const struct __lkmd_raw_t* __re
 
 void  lkmd_get_from_cb(const struct  __lkmd_raw_t  * _lkmd , int size ,  char (*dp)[MAX_LOADABLE_MDLS]  , lkmd_cb_getter );   
 
-char  * lkmd_get (const struct __lkmd_raw_t *  ,  int type , int size ,  char (*dp)[MAX_LOADABLE_MDLS]);  
+char  * lkmd_get (const struct __lkmd_t *  ,  int type , int size ,  char (*dp)[MAX_LOADABLE_MDLS]);  
 
 /** @fn lkmd_count_loaded_modules  (const struct __lkmd_raw_t * ) 
  *  @brief count all modules available 
@@ -195,7 +195,7 @@ int  lkmd_count_live_modules ( const struct __lkmd_raw_t * __restrict__ __lkmd )
  *  @param struct  __lkmd_raw_t * 
  *  @return void * should be null  for Success 
  */ 
-void * lkmd_release(struct __lkmd_raw_t * __restrict__ __lkmd); 
+void * lkmd_release(struct __lkmd_t * __restrict__ __lkmd); 
 
 //!show dumper on stdout ,  
 void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char (*dumper)[size]) ; 
@@ -203,6 +203,7 @@ void lkmd_list_dumper_contains ( const  unsigned char  size ,  const char (*dump
 void lkmd_splice(char * __restrict__   ,  int  blimit) ; 
 
 void lkmd_splice_show( const char  * __restrict__ ) ;  
+
 
 
 #endif /** _lkmd*/ 

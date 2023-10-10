@@ -108,11 +108,9 @@ main (int __ac  , char ** __av)
 
   arguments_parser(__ac, __av ,  &flags);   
 
-
-  lkmd_raw_t   module_list ; 
-  
-  lkmd_syspath_open(_nullable, &module_list)  ; 
  
+  struct __lkmd_t * kmod  = _nullable ; 
+  kmod =lkmd_syspath_open(_nullable ,  kmod) ; 
  
   mrq_t  request ; 
 
@@ -122,7 +120,7 @@ main (int __ac  , char ** __av)
 
   //lkmd_get_from_cb(&module_list ,  flags.lines , request.dump_register , lkmd_get_live_modules) ;  
  
-  char *a = lkmd_get(&module_list , LKMD_LIVE_ONLY ,flags.lines ,  request.dump_register) ;  
+  char *a = lkmd_get(kmod , LKMD_RAW_ONLY ,flags.lines ,  request.dump_register) ;  
 
 
   lkmd_splice(a , -2 );
@@ -135,7 +133,7 @@ main (int __ac  , char ** __av)
 
   
   
-  (void *) lkmd_release(&module_list) ;  
+  (void *) lkmd_release(kmod) ;  
  
   return EXIT_SUCCESS ; 
 }

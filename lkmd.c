@@ -6,6 +6,7 @@
 
 #include <stdlib.h> 
 #include <strings.h>
+#include <sys/cdefs.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h> 
@@ -21,7 +22,7 @@
 
 #include "include/lkmd.h" 
 
-
+// ! should be removed later then ... 
 static int kmodlive = 0;
 
 static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ;
@@ -97,9 +98,19 @@ static void * lkmd_extract(const char * inbuff  , struct  __lkmd_live_t * modt)
 }
 
 
-struct __lkmd_raw_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_raw_t * lkmd )    
+struct __lkmd_t *  lkmd_syspath_open(const char * restrict gl_syspath , struct __lkmd_t * lkmd_subt )    
 {
- 
+
+  lkmd_subt = malloc(sizeof(struct  __lkmd_raw_t )) ; 
+  
+  if (lkmd_subt  == _void_0h ) 
+    lkmd_errx(~1, "lkmd_syspath_open ! __init : bab allocation"); 
+  
+
+  struct __lkmd_raw_t  *lkmd =  (struct  __lkmd_raw_t*)  lkmd_subt ;  
+
+  
+  
   char sysmpath[MAX_LOADABLE_MDLS]  = LKMD_LINUX_SYSMOD ; 
   if (gl_syspath != _nullable ) { 
      memcpy(sysmpath , gl_syspath , strlen(gl_syspath)) ; 
@@ -155,7 +166,7 @@ struct __lkmd_raw_t *  lkmd_syspath_open(const char * restrict gl_syspath , stru
   lkmd->total_of_module = index; 
  
 
-  return   lkmd ; 
+  return   lkmd_subt;  
 }
 
 void lkmd_get_raw_modules( const struct __lkmd_raw_t *  lkmd ,  int m_size   , char  (*dumper)[MAX_LOADABLE_MDLS] )  
@@ -241,7 +252,11 @@ void  lkmd_get_from_cb (const struct __lkmd_raw_t  * lkmd , int  size  , char  (
 
 
 
-char *lkmd_get (const struct __lkmd_raw_t * lkmd  , int type , int size , char (*dp)[MAX_LOADABLE_MDLS]) { 
+char *lkmd_get (const struct __lkmd_t * lkmod  , int type , int size , char (*dp)[MAX_LOADABLE_MDLS]) { 
+ 
+  
+  struct __lkmd_raw_t  *lkmd = (struct __lkmd_raw_t *) lkmod ;   
+  
   
   switch(type) 
   {
@@ -274,14 +289,19 @@ int lkmd_count_live_modules(const struct __lkmd_raw_t *restrict lkmd)
   return lkmd->total_of_live_module ; 
 }
 
-void  * lkmd_release( struct __lkmd_raw_t *  restrict  lkmd )  
+void  * lkmd_release( struct __lkmd_t *  restrict  kmod  )  
 {
-   __check_nonull(lkmd); 
+   __check_nonull(kmod);
+   
+   struct __lkmd_raw_t  *lkmd = ( struct __lkmd_raw_t* )kmod ; 
+   __check_nonull(lkmd) ;  
    __check_nonull(lkmd->modules) ; 
    
-   free(lkmd->modules) ;
+   free(lkmd->modules) ;  
+   free(kmod) ;  
 
-   return  lkmd->modules ;  
+
+   return  lkmd->modules ; // ! it's should be nil  
 }
 
 void lkmd_list_dumper_contains(const unsigned char size, const char (*dumper)[MAX_LOADABLE_MDLS]) 
