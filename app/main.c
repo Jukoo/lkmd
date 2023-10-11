@@ -105,8 +105,7 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
 
 
 
-int
-main (int __ac  , char ** __av) 
+int  __alwys_unused  main (int __ac  , char ** __av) 
 {
 
   flarg  flags ; 

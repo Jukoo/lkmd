@@ -13,7 +13,8 @@ typedef  void *  __void  ;
 #define   _void_0h   _nullable 
 
 
-#define  __nrtrn    __attribute__((noreturn)) 
+#define  __nrtrn         __attribute__((noreturn))
+#define  __alwys_unused  __attribute__((__unused__))
 
 /**  debug print */ 
 #ifdef   __dbgprt  
