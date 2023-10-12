@@ -23,11 +23,6 @@ typedef  void *  __void  ;
 #define  dbgprt  
 #endif //__dbgprt  
 
-#define  LKMD_BANNER \
-  printf("\t%-15s\t\t\t%-15s\t%-15s\n" , "Modules" , "Size"  , "Used By") ;\
-  puts("------------------------------------------------------------------");
-
-
 /**
  * Give default value when MAX_LOADABLE_MDLS is not set 
  * compile time flags  
@@ -43,6 +38,12 @@ typedef  void *  __void  ;
 
 #ifdef SHOW_LKMD_TAG  
 
+
+#define  LKMD_BANNER \
+  printf("\t%-15s\t\t\t%-15s\t%-15s\n" , "Modules" , "Size"  , "Used By") ;\
+  puts("------------------------------------------------------------------");
+
+
 #define  lkmd_log(__mesg , ...) ({\
     char smesg[MAX_LOADABLE_MDLS]  ={ 0 } ; \
     sprintf(smesg , __mesg , ##__VA_ARGS__) ; \
@@ -57,6 +58,12 @@ typedef  void *  __void  ;
 
 
 #else 
+
+
+#define  LKMD_BANNER \
+  printf("\t%-5s\t\t\t%-5s\t%-5s\n" , "Modules" , "Size"  , "Used By") ;\
+  puts("------------------------------------------------------------------");
+
 
 #define  lkmd_log(__mesg , ...) ({\
     fprintf(stdout , __mesg   , ##__VA_ARGS__);\
@@ -168,7 +175,7 @@ typedef struct __lmkd_t  lkmd_t ;
 
 
 
-/** @fn  void *lkmd_syspath_open  (const char *  , struct __lkmd_raw_t* ) ; 
+/** @fn  void *lkmd_load_live_sysprocmod (void) ; 
  *  @brief read  proc module file (LKMD_LINUX_PROCMOD)  to get  loaded  module name
  *  this function is used  to  make match between current loaded module 
  *  and modules sys path directory (LKMD_LINUX_SYSMOD  
