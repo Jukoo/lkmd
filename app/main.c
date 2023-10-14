@@ -114,10 +114,10 @@ int  __alwys_unused  main (int __ac  , char ** __av)
   arguments_parser(__ac, __av ,  &flags);   
 
  
-  struct __lkmd_t * kmod  = _nullable ; 
-  kmod =lkmd_syspath_open(_nullable ,  kmod) ; 
+  struct __lkmd_t * kmod = lkmd_syspath_open(_void_0h) ; 
+
  
-  mrq_t  request ; 
+  mrq_t  request ={ .size=flags._lines } ;  
 
   //lkmd_get_raw_modules_mrq( &module_list  , flags.lines  , &request ) ; 
   //lkmd_get_live_modules(&module_list ,  flags.lines,  request.dump_register) ; 
@@ -125,12 +125,15 @@ int  __alwys_unused  main (int __ac  , char ** __av)
 
   //lkmd_get_from_cb(&module_list ,  flags.lines , request.dump_register , lkmd_get_live_modules) ;  
 
-  lkmd_show_lkmod(kmod,  flags._lines) ; 
-  //char *a = lkmd_get(kmod , LKMD_RAW_ONLY ,flags.lines ,  request.dump_register) ;  
+  //lkmd_show_lkmod(kmod,  flags._lines) ; 
+  
+  char *a = lkmd_get_from_mrq(kmod , LKMD_RAW_ONLY ,  &request ) ; //flags.lines ,  request.dump_register) ;  
 
   //lkmd_splice(a , -2 );
   //dbgprt ;
-  //lkmd_splice_show(a); 
+ 
+
+  lkmd_splice_show(a); 
 
 
   //lkmd_list_dumper_contains( flags.lines , request.dump_register) ; 
@@ -140,5 +143,5 @@ int  __alwys_unused  main (int __ac  , char ** __av)
   
   (void *) lkmd_release(kmod) ;  
  
-  return EXIT_SUCCESS ; 
+  lkmd_exit(EXIT_SUCCESS) ;  
 }
