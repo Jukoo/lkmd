@@ -1,0 +1,6 @@
+lkmd 
+----- 
+The purpose of this program is to add value to the lsmod command by adding new features such as line search and display limit by specifying a flag and some options to do other operations, as well as getting a global view of all kernel modules.
+On the other hand, commands that help develop kernel modules such as insmod, modinfo and dmesg (to see what the driver prints, etc.)...,
+and a few additional features.
+To sum up the project, the aim is to unify all these commands in a single binary.
