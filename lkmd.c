@@ -18,6 +18,7 @@
 #include <string.h> 
 #include <errno.h> 
 #include <fcntl.h> 
+#include <sys/types.h> 
 
 
 #include "include/lkmd.h" 
@@ -28,6 +29,39 @@ static int kmodlive = 0;
 static  char raw_kmod[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ={0} ;
 
 static char resquest[0xff][0xff] ={0} ;  
+
+
+struct __mod_request *  mrq_set(void  *  mrq_generic    ,  int size ) 
+{
+  static u_char  cm  =0  ;  
+  if ( mrq_generic == _nullable ) 
+  {
+    struct  __mod_request  * fresh_mrq =(struct __mod_request*) malloc(sizeof(struct __mod_request ))  ; 
+    fresh_mrq->size = size ; 
+    fresh_mrq->check_mall = fresh_mrq ;  
+    ATOMCHG(cm);  
+
+#ifdef LKMD_MRQ_AS_NODE 
+    fresh_mrq->_next = _void_0h ; 
+#endif 
+    return fresh_mrq ; 
+  }
+
+  ((struct __mod_request * )mrq_generic)->size = size ; 
+  
+  if (cm ==  0) 
+  ((struct  __mod_request *)mrq_generic)->check_mall = _void_0h ; 
+  
+  return   (struct __mod_request *)mrq_generic;  
+
+}
+
+
+void mrq_checkmall(struct  __mod_request  * mrq ) 
+{
+  if (mrq->check_mall != _void_0h ) free(mrq) ;
+}
+
 
 static struct  __lkmd_live_t *lkmd_load_live_sysprocmod (void) 
 {
@@ -90,7 +124,7 @@ static void * lkmd_extract(const char * inbuff  , struct  __lkmd_live_t * modt)
       default  : 
         break ; 
     }
-    token = strtok(_nullable , " ") ;
+    token = strtok(_nullable , sep) ;
     stage++ ; 
   }
 
@@ -178,11 +212,13 @@ void lkmd_get_raw_modules( const struct __lkmd_raw_t *  lkmd ,  int m_size   , c
   //! That show all module from  LKMD_LINUX_SYSMOD  |  LKMD_LINUX_PROCMOD_RAWS  
   while  ( index  <  m_size  )  
   {   
-    
     memcpy(dumper[index] , (raw_kmod+index) , strlen(raw_kmod[index]) ) ; 
     index++; 
   }
-    //lkmd_log("%s",(char *)(raw_kmod+index)) ; 
+    //lkmd_log("%s",(char *)(raw_kmod+index)) ;  
+    
+
+  memset( (dumper +(index+1))  , 0 ,   0xff - m_size  ) ; 
   
 }
 
@@ -202,6 +238,7 @@ struct __mod_request * lkmd_get_raw_modules_mrq (  const struct  __lkmd_raw_t * 
   return mrq; 
 }
 
+
 void  lkmd_get_live_modules( const struct __lkmd_raw_t  *  lkmd ,   int m_size , char  (*dumper)[MAX_LOADABLE_MDLS])     
 {
   __check_nonull(lkmd->modules);
@@ -216,8 +253,6 @@ void  lkmd_get_live_modules( const struct __lkmd_raw_t  *  lkmd ,   int m_size ,
     memcpy( (dumper+index),  module_names, strlen(module_names)) ;  
     index++ ;  
   }
-
-
 
 }
 
@@ -407,7 +442,6 @@ void lkmd_splice_show ( const  char *  scp_lkmd  )
  * []  show live module  like  lsmod   
  * NOTE :
  * lkmd -n --lines   x  
- * lmkd -g --goto    x 
  * lmkd -i --interval  x:y   [ even if  the  y number  is greater than x   ]
  * lmkd -h --human-readable  < human readable> 
  * lkmd -f --find  module  

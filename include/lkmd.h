@@ -7,6 +7,12 @@
 #if !defined  (_lkmd) 
 #define        _lkmd
 
+#include <sys/types.h> 
+
+#define   __USE_MISC 
+
+#define  ATOMCHG(x) x^=1  
+
 typedef  void *  __void  ;  
 #define   _nullable    (( __void  ) (0U << 1)) 
 #define   _Nullable  _nullable  
@@ -61,7 +67,7 @@ typedef  void *  __void  ;
 
 
 #define  LKMD_BANNER \
-  printf("\t%-5s\t\t\t%-5s\t%-5s\n" , "Modules" , "Size"  , "Used By") ;\
+  printf("\t%-5s\t\t\t%-5s\t\t%-5s\n" , "Modules" , "Size"  , "Used By") ;\
   puts("------------------------------------------------------------------");
 
 
@@ -113,8 +119,10 @@ enum {
 
 enum { 
   LKMD_LIVE_ONLY , 
-  LKMD_RAW_ONLY 
+  LKMD_RAW_ONLY, 
+  LKMD_NONE_LIVE_ONLY
 }; 
+
 
 //! lkmd internal error code  
 enum { 
@@ -160,8 +168,6 @@ struct __lkmd_live_t {
 } ;
 
 
-typedef  void (*lkmd_cb_getter) (const  struct __lkmd_raw_t  *  , int ,  char (*)[MAX_LOADABLE_MDLS] ) ; 
-
 /**  module  request query */  
 
 typedef  struct  __mod_request mrq_t  ; 
@@ -169,20 +175,36 @@ struct  __mod_request {
   char  dump_register[MAX_LOADABLE_MDLS][MAX_LOADABLE_MDLS] ; 
   int   size  ; 
 #if defined (LKMD_MRQ_AS_NODE) 
+  /**  when  LKMD_MRQ_AS_NODE is defined the mrq  nodes are liked  */
   struct __mod_request * _next ; 
-#endif  
+#endif
+  /**  detect when allocation happen */
+  struct __mod_request * check_mall ;   
 } ; 
 
+typedef  void (*lkmd_cb_getter) (const  struct __lkmd_raw_t  *  , int _size ,  char (*)[MAX_LOADABLE_MDLS] ) ;
+typedef  void (*lkmd_cb_getter_mrq) (const  struct __lkmd_raw_t * ,  struct  __mod_request *  __mrqt)  ;   
+
+
+typedef struct __lmkd_t  lkmd_t ; 
 
 extern  inline void  __nrtrn lkmd_exit( int  __sc  ) { 
   _Exit(__sc) ; 
 }
 
-void mrq_set( struct __mod_request   * mrq )  ;  
+/**  @fn struct   __mod_request  *  mrq_set ( void * , int new_init_size  )  
+ *   @brief  initialize the mrq_t  and set new value to size 
+ *           that be used  to match  dump_register  size 
+ *          
+ *   @param  void *    when   null that make and new allocation  of mrq 
+ *           otherwise it just use it as an normal no allocation 
+ *   @param  int new_init_size  for size
+ *   @return struct __mod_request *  ; 
+ *
+ */ 
+struct __mod_request * mrq_set(  void  *   , int new_size )  ;  
 
-typedef struct __lmkd_t  lkmd_t ; 
-
-
+void mrq_checkmall  ( struct __mod_request * mrq )  ; 
 
 /** @fn  __lkmd_live_t  *lkmd_load_live_sysprocmod (void) ; 
  *  @brief read  proc module file (LKMD_LINUX_PROCMOD) and feed  _lkmd_live_t  
