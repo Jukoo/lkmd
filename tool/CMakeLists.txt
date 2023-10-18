@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(lkmd.elfbin  VERSION  1.0)
+project(lkmd.elfb  VERSION  1.0)
 
 add_executable(${PROJECT_NAME} main.c) 
 
@@ -9,7 +9,7 @@ if(ENDBG)
   set(CMAKE_BUILD_TYPE  Debug) 
 endif() 
 
-target_link_directories(${PROJECT_NAME}  PRIVATE ../build) 
+target_link_directories(${PROJECT_NAME}  PRIVATE ../libs) 
 target_include_directories(${PROJECT_NAME}  PRIVATE  ../include)
 
 target_link_libraries(${PROJECT_NAME}  lkmd)

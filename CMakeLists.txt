@@ -3,7 +3,9 @@ project(lkmd  VERSION 1.0 DESCRIPTION "advance lsmod command  'just lsmod with e
 set(CMAKE_C_STANDARD 99) 
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-add_library(${PROJECT_NAME}  SHARED lkmd.c) #-fPIC -shared
+set(lmkd_source  src/lkmd.c) 
+
+add_library(${PROJECT_NAME}  SHARED  ${lmkd_source}) #-fPIC -shared
 
 
 if(INCLTAG) 
@@ -16,7 +18,7 @@ if(DBGPRT)
   add_definitions(-D__dbgprt)  
 endif() 
 
-add_subdirectory(app) 
+add_subdirectory(tool) 
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)  #-I  
 
