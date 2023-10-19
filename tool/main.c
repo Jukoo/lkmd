@@ -18,7 +18,9 @@
 #include <string.h> 
 
 
-#include "lkmd.h" 
+#include "lkmd.h"
+#include "getoptusage.h" 
+
 
 #define VERSION  "1.0"
 #define MAXBUFF   0xfa
@@ -82,6 +84,13 @@ struct _long_options_t  lopt= {
 }; 
  
 
+char *desc[]=  { 
+  "show current version of the programme",
+  "print this help and exit" ,
+  "how many n lines you want to print"
+}; 
+
+
 void  parse_lopt_for_usage ( const struct  _long_options_t  *long_opt ,  size_t   long_opt_size )   
 {
   int  index  =0 ; 
@@ -129,7 +138,7 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
           break;
         default : 
           puts("unknow flag options") ; 
-          exit(0); 
+          exit(0);
           break; 
      }
    }
@@ -141,13 +150,25 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
 int  __alwys_unused  main (int __ac  , char ** __av) 
 {
 
+  struct __getopt_usage_t  * guest = _void_0h ; 
+  
+  guest = init(excepted_option ,GETOPT_SIZE(excepted_option))  ;
+
+
+  dump_desclist(guest  ,desc) ; 
+  printf("size of  option  %i\n" , guest->opt_size)  ; 
+  show_usage(guest) ; 
+  
+
+   
+
   flarg  flags ;
  
 
-  int options_size = sizeof(excepted_option) / sizeof(excepted_option[0])  ;
-  printf("size of lopt  %i \n" , options_size );  
+  //int options_size = sizeof(excepted_option) / sizeof(excepted_option[0])  ;
+  //printf("size of lopt  %i \n" , options_size );  
   
-  parse_lopt_for_usage(&lopt ,  options_size) ; 
+//parse_lopt_for_usage(&lopt ,  options_size) ; 
 
   arguments_parser(__ac, __av ,  &flags);   
 
