@@ -48,10 +48,14 @@ void dump_desclist ( struct  __getopt_usage_t  * goptu  ,    char  * const *desc
   while ( desclist_index  < goptu->opt_size ) 
   {
 
-    memcpy ((goptu->opt_desc+desclist_index) ,  desclist[desclist_index] ,strlen(desclist[desclist_index]))  ; 
+    memcpy (
+        (goptu->opt_desc+desclist_index) , 
+        desclist[desclist_index] ,
+        strlen(desclist[desclist_index]))  ; 
+
     desclist_index++ ;
   }
-
+  
   
 } 
 
@@ -62,11 +66,12 @@ show_usage ( struct __getopt_usage_t * goptu  )
    {
      errx(~0 ,"nil <nothing to show>") ; 
    } 
-   int index  = 0 ;   
+   int index  = 0 ;
     
    while(index < goptu->opt_size) 
    {
-      fprintf(stdout, "%s\n", goptu->opt_desc[index]); 
+      fprintf(stdout  , "\t--%-3s , -%-3c :" ,  goptu->opt[index].name , goptu->opt[index].val) ; 
+      fprintf(stdout, "%-10s\n", goptu->opt_desc[index]); 
       index++ ; 
    }
 }

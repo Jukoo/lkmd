@@ -42,17 +42,31 @@ struct __getopt_usage_t {
 
 
 
-// init with allocation  
+/** @fn  struct __getopt_usage_t  * init (struct option *   , int size )   
+ *  @brief initialize  getoptusage struct 
+ *  @param   struct option * 
+ *  @param   int size  :!NOTE: you'd better  user GETOPT_SIZE() macro  to get the size of  options
+ *  @return  struct  __getopt_usage_t  *
+ */ 
 struct __getopt_usage_t*  
 init( struct option * __opt , int size ); 
 
 void 
 init_ (struct  __getopt_usage_t  * gu  , struct  option *  opt) ;  
 
+/**  @fn void dump_desclist ( struct __getopt_usage_t * , char *const *  )  
+ *   @brief dump description list  in  getoptusage structure 
+ *   @param  __getopt_usage_t * 
+ *   @param  char * const *  
+ *   
+ */
 void 
 dump_desclist ( struct  __getopt_usage_t *  __goptu  ,  char *const *__desclist ) ; 
 
 
+/** @fn  show_usage (struct __getopt_usage_t *)  
+ *  @brief print  description list dumped on gopt_usage_t 
+ */ 
 void  show_usage (struct __getopt_usage_t *  __goptu ) ; 
 
 
