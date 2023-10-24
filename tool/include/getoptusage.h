@@ -26,10 +26,6 @@
 #ifndef   GETOPT_USAGE_H 
 #define   GETOPT_USAGE_H 1 
 
-#ifndef _GETOPT_EXT_H  
-#endif
-
-
 #define   MXBUFF 0xff
 
 enum {

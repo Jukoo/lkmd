@@ -28,7 +28,7 @@
 
 struct  __getopt_usage_t *  init ( struct  option *  opt   , int size  )  
 {
-  
+
   if ( opt == (void *) 0   ) return  (void *) 0 ; 
    
   struct __getopt_usage_t *  goptu = (struct __getopt_usage_t*) malloc(sizeof(*goptu)) ;  
