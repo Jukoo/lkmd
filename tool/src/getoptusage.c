@@ -20,7 +20,7 @@
 #include <string.h> 
 #include <stdio.h> 
 #include <err.h> 
-
+#include <libgen.h>  
 
 #include "getoptusage.h"
 #include <getopt.h>
@@ -30,7 +30,6 @@ struct  __getopt_usage_t *  init ( struct  option *  opt   , int size  )
 {
   
   if ( opt == (void *) 0   ) return  (void *) 0 ; 
- 
    
   struct __getopt_usage_t *  goptu = (struct __getopt_usage_t*) malloc(sizeof(*goptu)) ;  
   
@@ -45,7 +44,7 @@ struct  __getopt_usage_t *  init ( struct  option *  opt   , int size  )
 void dump_desclist ( struct  __getopt_usage_t  * goptu  ,    char  * const *desclist ) 
 {
   int  desclist_index = 0 ; 
-  while ( desclist_index  < goptu->opt_size ) 
+while ( desclist_index  < goptu->opt_size ) 
   {
 
     memcpy (
@@ -60,18 +59,58 @@ void dump_desclist ( struct  __getopt_usage_t  * goptu  ,    char  * const *desc
 } 
 
 void
-show_usage ( struct __getopt_usage_t * goptu  )  
+show_usage ( struct __getopt_usage_t * goptu , char * const *  argv   )  
 {
    if (goptu == (void *) 0 )  
    {
      errx(~0 ,"nil <nothing to show>") ; 
-   } 
+   }
+ 
+   char rbasename[0x14] = {0}  ;
+   if ( argv !=  (void *) 0   ) 
+   {
+     (void*) rootbn(argv ,  rbasename);
+     memcpy(rbasename , __xpg_basename(rbasename)  , strlen(rbasename)) ; 
+     fprintf(stdout , "%s:\n" , rbasename ) ; 
+      
+     
+   }
    int index  = 0 ;
-    
    while(index < goptu->opt_size) 
    {
-      fprintf(stdout  , "\t--%-3s , -%-3c :" ,  goptu->opt[index].name , goptu->opt[index].val) ; 
+      fprintf(stdout  , "\t--%-6s,%-10c\t" ,  goptu->opt[index].name , goptu->opt[index].val) ; 
       fprintf(stdout, "%-10s\n", goptu->opt_desc[index]); 
       index++ ; 
    }
 }
+
+
+static char *  rootbn(char * const * argv ,  char  *rb_dump ) 
+{
+  char *localbasname =(char *) (*argv+0) ; 
+   
+  if (strlen(localbasname) >  0x14)    
+  {
+     errx(-23 ,  "root basename too long !");  
+  }
+
+  rootbn_prettyfy(localbasname) ;  
+  memcpy(rb_dump , (localbasname) ,  0x14) ; 
+  return rb_dump ; 
+  
+}
+
+
+static char * __mush_check  rootbn_prettyfy (  char *basename ) 
+{
+   //!  detect  if it's contain    './' 
+  
+  char dot_start = 0x2e ; 
+  if ( (*basename+0) ==dot_start  &&  (*basename+1) ==  dot_start++) 
+  {
+    return memcpy(basename ,   (basename+2) , strlen(basename)) ; 
+  } 
+  
+  return  basename ; 
+}
+ 

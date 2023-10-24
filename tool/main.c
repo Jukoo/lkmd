@@ -154,11 +154,16 @@ int  __alwys_unused  main (int __ac  , char ** __av)
   
   guest = init(excepted_option ,GETOPT_SIZE(excepted_option))  ;
 
+  if ( guest ==  _void_0h )  
+  {
+    errx (-1 , "fait to get option usage ") ;  
+  }
 
   dump_desclist(guest  ,desc) ; 
   printf("size of  option  %i\n" , guest->opt_size)  ; 
-  show_usage(guest) ; 
-  
+  show_usage(guest, __av)  ; 
+ 
+  endof_getoptusage(guest) ; 
 
    
 

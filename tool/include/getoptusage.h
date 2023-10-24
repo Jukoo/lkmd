@@ -15,7 +15,13 @@
      GNU General Public License for more details.
 */  
 
-
+/**  
+ * TODO  : possible perspective  
+ * give the capability to user programmer  to set  some 
+ * extra meta such as  version or little description through 
+ * environment variable  
+ * *
+ */ 
 #pragma once 
 #ifndef   GETOPT_USAGE_H 
 #define   GETOPT_USAGE_H 1 
@@ -31,13 +37,19 @@ enum {
 #define  GETOPT_SIZE(__target_data) \
   sizeof(__target_data)/sizeof(__target_data[0]) 
  
-} ; 
+} ;
+
+#ifdef  SHOWUPWUR  
+  #define  __mush_check  __attribute__((warn_unused_result)) 
+#else 
+  #define  __mush_check 
+#endif 
 
 typedef  struct  __getopt_usage_t  gopt_usage_t  ; 
 struct __getopt_usage_t { 
   struct option *  opt ; 
   int opt_size  ; 
-  char opt_desc[MXBUFF][MXBUFF] ; 
+  char opt_desc[MXBUFF][MXBUFF] ;
 } ; 
 
 
@@ -54,6 +66,10 @@ init( struct option * __opt , int size );
 void 
 init_ (struct  __getopt_usage_t  * gu  , struct  option *  opt) ;  
 
+extern  inline void endof_getoptusage  ( struct __getopt_usage_t *  __restrict__   __goptu  ) {
+   if(__goptu  == (void *)0) return  ; 
+   free(__goptu) ; 
+}
 /**  @fn void dump_desclist ( struct __getopt_usage_t * , char *const *  )  
  *   @brief dump description list  in  getoptusage structure 
  *   @param  __getopt_usage_t * 
@@ -64,12 +80,14 @@ void
 dump_desclist ( struct  __getopt_usage_t *  __goptu  ,  char *const *__desclist ) ; 
 
 
+
 /** @fn  show_usage (struct __getopt_usage_t *)  
  *  @brief print  description list dumped on gopt_usage_t 
  */ 
-void  show_usage (struct __getopt_usage_t *  __goptu ) ; 
+void  show_usage (struct __getopt_usage_t *  __goptu ,  char * const *  __argv ) ; 
 
+// !TODO : get basename of the program  without  ./ 
+static char * rootbn (char  *const *  __argv ,char *__root_basename_dumper)  ; 
 
-
-
+static char * __mush_check rootbn_prettyfy ( char * basename ) ;  
 #endif /** GETOPT_USAGE_H  */
