@@ -24,25 +24,6 @@
 
 #define VERSION  "1.0"
 #define MAXBUFF   0xfa
-#define X_BN 
-
-#ifndef  X_BN 
-#define BASENAME(ac , av) ({\
-    char * bn_elfbin= av[ac^1] ;\
-    char  bn[0x14] = {0} ; \
-    memcpy( bn, (bn_elfbin+2) , 0x14);\
-    printf("%s\n",bn);})
-#else  
-#define BASENAME(ac_as_exit_code , __mesg , ...) \
-  errx(ac_as_exit_code , __mesg , ##__VA_ARGS__)
-#endif 
-
-
-typedef struct  _long_options_t  lopt_t   ; 
-struct  _long_options_t  { 
-  struct  option   *opt ;  
-  char opt_desc[0xff][0xff] ;   
-} ; 
 
 enum { 
   BAD_NUMCOVER = ~3 
@@ -59,64 +40,44 @@ struct __flargs {
   int  _nonelives;                 //NOT IMPLTED  
   int  _human_readable ;           //NOT IMPLTED  
   int  _kmesg ;                    //NOT IMPLTED  
- 
+
+  struct  __getopt_usage_t * goptu  ; 
+
 } ; 
 
 
 #define LKMD_TAG  "LKMD" 
 
 struct option   excepted_option [] = { 
-  {  "version" , no_argument  , 0  , 'v'}  ,
+    {  "version" , no_argument  , 0  , 'v'}  ,
     {  "help" , no_argument  , 0  , 'h'} ,
     {  "lines" , no_argument  , 0  , 'l'} 
-
 } ;   
 
-struct _long_options_t  lopt= {  
-  
-  excepted_option ,  
 
-  { 
-    "show current version of the programme" , 
-    "print this help and exit" , 
-    "how many n lines you want to print"
-  }
-}; 
- 
-
-char *desc[]=  { 
+char *desc[]=  {
+  "lmkd lsmod like just  lmkd  [option]" ,
   "show current version of the programme",
   "print this help and exit" ,
   "how many n lines you want to print"
 }; 
 
 
-void  parse_lopt_for_usage ( const struct  _long_options_t  *long_opt ,  size_t   long_opt_size )   
-{
-  int  index  =0 ; 
-  while (  index < long_opt_size)   
-  {
-    fprintf(stdout , "options  ->  %s\n" , (long_opt->opt +index)->name);
-    fprintf(stdout  , " %s \n " , long_opt->opt_desc[index]) ; 
 
-    index++ ; 
-  }
-}
 
 
 void  arguments_parser ( int  argcount , char * const  * argvalues , struct __flargs *   flag_arguments) 
 {
-  errno = 0 ; 
-  if ( argcount   <=1  )
-  {     //display usage 
-        //
-     BASENAME(argcount  , "usage") ; 
-  }
   int option=0 ; 
-  const char *short_flags = "vhn:" ;
+  const char *short_flags = "vhl:" ;
 
+  flag_arguments->goptu =  init_with_desc(excepted_option , GETOPT_SIZE(excepted_option) ,  desc) ; 
+  if (flag_arguments->goptu == _void_0h ) 
+  {
+    errx(-1 , "getoptusage fail") ; 
+  }
   
-  while ( (option = getopt_long(argcount , argvalues , short_flags , lopt.opt , (void *)0 )) !=  ~0  ) 
+  while ( (option = getopt_long(argcount , argvalues , short_flags , flag_arguments->goptu->opt , (void *)0 )) !=  ~0  ) 
   {
     switch ( option ) 
     {
@@ -125,10 +86,10 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
           exit(0) ; 
           break; 
         case 'h' : 
-          puts("should display usage of the programme") ; 
-          exit(0) ; 
+          show_usage(flag_arguments->goptu , argvalues) ; 
+          exit(1) ; 
           break ;
-        case  'n' : 
+        case  'l' : 
           flag_arguments->_lines = strtol(optarg , (void *)0 ,  10) ; 
           if (errno != 0)
           {
@@ -142,6 +103,8 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
           break; 
      }
    }
+
+  endof_getoptusage(flag_arguments->goptu) ;  
    
 }
 
@@ -149,23 +112,6 @@ void  arguments_parser ( int  argcount , char * const  * argvalues , struct __fl
 
 int  __alwys_unused  main (int __ac  , char ** __av) 
 {
-
-  struct __getopt_usage_t  * guest = _void_0h ; 
-  
-  guest = init(excepted_option ,GETOPT_SIZE(excepted_option))  ;
-
-  if ( guest ==  _void_0h )  
-  {
-    errx (-1 , "fait to get option usage ") ;  
-  }
-
-  dump_desclist(guest  ,desc) ; 
-  printf("size of  option  %i\n" , guest->opt_size)  ; 
-  show_usage(guest, __av)  ; 
- 
-  endof_getoptusage(guest) ; 
-
-   
 
   flarg  flags ;
  
